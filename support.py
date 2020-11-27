@@ -177,6 +177,12 @@ def stimuli(nog, line1, roll1, skip1, circ_width, radius):
     circle = create_circ_gradient(radius, circ_width, height)
     slide_len = height*nog-height-1
     cent_loc = generate_center_location_row_lock(slide_len)
+    ct_loc = [[0.0,0.0],]
+    for x in range(1,len(cent_loc[0,:])):
+        if cent_loc[0,x]-cent_loc[0,x-1] > 0:
+            ct_loc.append([0.0,0.0])
+        else:
+            ct_loc.append([0.0,1.0])
     for z in range(len(scence[0,0,:])):
         new_ccp = cent_loc[0,z]
         new_rrp = cent_loc[1,z]
@@ -186,7 +192,7 @@ def stimuli(nog, line1, roll1, skip1, circ_width, radius):
                 y_row_j = y-new_rrp
                 if radius**2 >= (x_column_j)**2 + (y_row_j)**2:
                     scence[y,x,z] = circle[int(center_h+y_row_j), int(center_h+x_column_j)]
-    return scence, cent_loc
+    return scence, ct_loc
 
 
 def environment(samples,leng):
@@ -203,8 +209,8 @@ def environment(samples,leng):
         scene1, cent_loc1 = stimuli(leng, np.random.randint(1,6), np.random.randint(-2,2), np.random.randint(1,3), np.random.randint(1,2), 4)
         scence.append(scene1)
         cent_loc.append(cent_loc1)
-    for i,e in enumerate(cent_loc):
-        cent_loc[i] = e - 20*np.ones((len(e[:,0]), len(e[0,:])))
+    # for i,e in enumerate(cent_loc):
+    #     cent_loc[i] = e - 50*np.ones((len(e[:,0]), len(e[0,:])))
         
     scene = None
     for i, e in enumerate(scence):
@@ -219,7 +225,8 @@ def environment(samples,leng):
     scene.requires_grad_(True)
     cent = None
     for i, e in enumerate(cent_loc):
-        hold = np.moveaxis(e, -1, 0)
+        # hold = np.moveaxis(e, -1, 0)
+        hold = np.array(e)
         hold = torch.from_numpy(hold).to(device).float()
         hold = torch.unsqueeze(hold, 0)
         if cent is None:
@@ -261,11 +268,10 @@ def create_summary_apriori(ret):
 
 
 def make_kernel(alpha):
-    ray = torch.arange(1,32,1,device=device).float()
-    ker = alpha[0]*torch.cos(alpha[1]*torch.log(ray))+\
-    alpha[2]*torch.cos(alpha[3]*torch.log(ray))+\
-    alpha[4]*torch.cos(alpha[5]*torch.log(ray))+alpha[6]*torch.ones(31,device=device).float()
-    return ker.detach().cpu().numpy()
+    ray = torch.arange(1,102,1,device=device).float()
+    ker = alpha[0]*torch.cos(alpha[1]*torch.log(alpha[2]*ray+torch.abs(alpha[3])))+\
+    alpha[4]*torch.ones(101,device=device).float()
+    return torch.flip(ker, (0,)).detach().cpu().numpy()
 
 
 def create_summary_prior(ret):
@@ -307,23 +313,21 @@ def environment_to_gpu(scence, cent_loc):
 
 
 def make_test(net, scenef, cent_locf):
-    cent_locf = cent_locf - 20*np.ones((len(cent_locf[:,0]), len(cent_locf[0,:])))
     scenef, cent_locff = environment_to_gpu(scenef, cent_locf)
     output = net(scenef)
-    lossf = mse(output, cent_locff)
+    # lossf = mse(output, cent_locff)
     pred_pyf = output.cpu().detach().numpy()
     pred_pyf = np.moveaxis(pred_pyf, -1, 1)    
-    
+    cent_locf = np.array(cent_locf)
     fig = plt.figure()
     camera = Camera(fig)
-    for i in range(len(cent_locf[0,:])):
-        plt.xlim(-10,10)
-        plt.scatter(cent_locf[0,i],cent_locf[1,i],c='b')
+    for i in range(len(cent_locf[:,0])):
+        plt.scatter(cent_locf[i,0],cent_locf[i,1],c='b')
         plt.scatter(pred_pyf[i,0],pred_pyf[i,1],c='r')
         camera.snap()
     animation = camera.animate()
     animation.save('Q:/Documents/TDS SuperUROP/track_torch_prediction.gif', writer = 'pillow', fps=25)
-    return lossf
+    # return lossf
      
 
 def make_output_test_video(pred_py, cent_loc):

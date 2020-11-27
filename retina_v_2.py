@@ -82,7 +82,7 @@ class Retinal_NET(nn.Module):
         ama_out = self.amacrine_alpha(torch.sigmoid(self.amacrine_kernel(F.pad(ama_pre_pad, self.p1d))))
         cell_gang = torch.unsqueeze(torch.roll(torch.flatten(out,start_dim=3), -1, -1), -1)
         gang_pre_pad = self.ganglions_create(cell_gang[:,:,:,:-1,:])
-        gang_out = self.ganglion_kernel(F.pad(gang_pre_pad,self.p1d))      
+        gang_out = self.ganglion_kernel(F.pad(gang_pre_pad,self.p1d))
         ganglion_tot = torch.sigmoid(torch.sub(gang_out,torch.abs(ama_out)))
         rows = self.ganglion_row_create(ganglion_tot)
         cols = self.ganglion_col_create(ganglion_tot)
