@@ -31,10 +31,10 @@ class Retinal_NET(nn.Module):
         first = F.relu(self.temporal_conv(F.pad(self.space_conv(x), self.p1d)))
         out = self.last_lay(first) # Make sure that it is positive
         cell_ama = torch.unsqueeze(torch.flatten(out,start_dim=3), -1)
-        ama_pre_pad = self.amacrine_create(cell_ama[:,:,:,:-1,:])
+        ama_pre_pad = self.amacrine_create(cell_ama[:,:,:,:-2,:])
         ama_out = self.amacrine_alpha(torch.sigmoid(self.amacrine_kernel(F.pad(ama_pre_pad, self.p1d))))
-        cell_gang = torch.unsqueeze(torch.roll(torch.flatten(out,start_dim=3), -1, -1), -1)
-        gang_pre_pad = self.ganglions_create(cell_gang[:,:,:,:-1,:])
+        cell_gang = torch.unsqueeze(torch.roll(torch.flatten(out,start_dim=3), -25, -1), -1)
+        gang_pre_pad = self.ganglions_create(cell_gang[:,:,:,:-2,:])
         gang_out = self.ganglion_kernel(F.pad(gang_pre_pad,self.p1d))
         ganglion_tot = torch.sigmoid(torch.sub(gang_out,torch.abs(ama_out)))
         cols = self.ganglion_col_create(ganglion_tot)
@@ -44,26 +44,53 @@ class Retinal_NET(nn.Module):
 
 if __name__ == "__main__":
     net = Retinal_NET().to(device)
-    envi, res = environment(2, 250,200,240,0.25,0.1,0.33)
+    envi, res = environment(5, 250,200,160,0.2,0.05,0.5)
     # torch.autograd.set_detect_anomaly(True)
-    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 250)
+    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 500)
     plt.plot(loss_vals)
     
-    # del envi
-    # envi, res = environment(5, 250,200,240,0.25,0.1,0.33)
-    # loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 500)
-    # plt.plot(loss_vals)
+    del envi
+    envi, res = environment(4, 250,200,160,0.2,0.05,0.5)
+    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 450)
+    plt.plot(loss_vals)
 
-    # del envi
-    # envi, res = environment(5, 250,200,240,0.25,0.1,0.33)
-    # loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 500)
-    # plt.plot(loss_vals)
+    del envi
+    envi, res = environment(4, 250,200,160,0.2,0.05,0.5)
+    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 400)
+    plt.plot(loss_vals)
     
-    # del envi
-    # envi, res = environment(5, 250,200,240,0.25,0.1,0.33)
-    # loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 500)
-    # plt.plot(loss_vals)
+    del envi
+    envi, res = environment(4, 250,200,160,0.2,0.05,0.5)
+    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 350)
+    plt.plot(loss_vals)
+    
+    del envi
+    envi, res = environment(4, 250,200,160,0.2,0.05,0.5)
+    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 300)
+    plt.plot(loss_vals)
+    
+    del envi
+    envi, res = environment(4, 250,200,160,0.2,0.05,0.5)
+    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 250)
+    plt.plot(loss_vals)
 
-    testRes = createTest(net, 250,200,240,0.25,0.1,0.33)
+    del envi
+    envi, res = environment(4, 250,200,160,0.2,0.05,0.5)
+    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 250)
+    plt.plot(loss_vals)
+
+    del envi
+    envi, res = environment(4, 250,200,160,0.2,0.05,0.5)
+    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 250)
+    plt.plot(loss_vals)
+
+    del envi
+    envi, res = environment(4, 250,200,160,0.2,0.05,0.5)
+    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 250)
+    plt.plot(loss_vals)
+
+    create_summary_apriori(net)
+    testRes = createTest(net, 250,200,160,0.2,0.05,0.5)
     print(testRes)
+    
     

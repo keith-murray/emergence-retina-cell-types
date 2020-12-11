@@ -213,16 +213,27 @@ def create_summary_apriori(ret):
 
 
 def make_kernel(alpha):
-    ray = torch.arange(1,102,1,device=device).float()
+    ray = torch.arange(1,42,1,device=device).float()
     ker = alpha[0]*torch.cos(alpha[1]*torch.log(alpha[2]*ray+torch.abs(alpha[3])))+\
-    alpha[4]*torch.ones(101,device=device).float()
+    alpha[4]*torch.ones(41,device=device).float()
     return torch.flip(ker, (0,)).detach().cpu().numpy()
+
+
+def make_matrix(alpha):
+    x_t_1 = alpha[0]*torch.exp(-0.5*(torch.arange(-2,3,device=device,dtype=torch.float).float()/alpha[1])**2)
+    x_t_2 = alpha[2]*torch.exp(-0.5*(torch.arange(-2,3,device=device,dtype=torch.float).float()/alpha[3])**2)
+    y_t_1 = alpha[4]*torch.exp(-0.5*(torch.arange(-2,3,device=device,dtype=torch.float).float()/alpha[5])**2)
+    y_t_2 = alpha[6]*torch.exp(-0.5*(torch.arange(-2,3,device=device,dtype=torch.float).float()/alpha[7])**2)
+    x_t = x_t_1 - x_t_2
+    y_t = y_t_1 - y_t_2
+    base = torch.squeeze(torch.mul(torch.unsqueeze(x_t,-1),torch.unsqueeze(y_t,0))).detach().cpu().numpy()
+    return base
 
 
 def create_summary_prior(ret):
     fig, axs = plt.subplots(2, 2)
     axs[1,0].plot(make_kernel(ret.temporal_conv.alpha)) # temporal_conv
-    axs[1,1] = sns.heatmap(torch.squeeze(ret.space_conv.weight).detach().cpu().numpy())
+    axs[1,1] = sns.heatmap(make_matrix(ret.space_conv.alpha))
     axs[0,0].plot(make_kernel(ret.amacrine_kernel.alpha)) # amacrine_kernel
     axs[0,1].plot(make_kernel(ret.ganglion_kernel.alpha)) # ganglion_kernel
     axs[1,0].set_title('Bipolar Time Kernel')
@@ -235,7 +246,7 @@ def create_summary_prior(ret):
 
     
 if __name__ == "__main__":
-    test = scene(250,200,240,0.05,0.05,0.75)
+    test = scene(250,200,160,0.2,0.05,0.5)
     testScene, another = test.createScene()
     fig = plt.figure()
     camera = Camera(fig)
