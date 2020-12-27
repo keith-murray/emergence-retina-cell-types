@@ -44,60 +44,17 @@ class Retinal_NET(nn.Module):
 
 if __name__ == "__main__":
     net = Retinal_NET().to(device)
-    envi, res = environment(15, 250,30,120,1,0,1)
+    envi, res = environment(10, 250,30,120,1,0,1)
     # torch.autograd.set_detect_anomaly(True)
     loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 600)
     plt.plot(loss_vals)
     
-    del envi, res
-    envi, res = environment(15, 250,30,120,1,0,1)
-    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 600)
-    plt.plot(loss_vals)
-
-    del envi, res
-    envi, res = environment(15, 250,30,120,1,0,1)
-    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 600)
-    plt.plot(loss_vals)
-    
-    del envi, res
-    envi, res = environment(15, 250,30,120,1,0,1)
-    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 600)
-    plt.plot(loss_vals)
-
-    del envi, res
-    envi, res = environment(15, 250,30,120,1,0,1)
-    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 600)
-    plt.plot(loss_vals)
-    
-    del envi, res
-    envi, res = environment(15, 250,30,120,1,0,1)
-    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 600)
-    plt.plot(loss_vals)
-
-    del envi, res
-    envi, res = environment(15, 250,30,120,1,0,1)
-    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 600)
-    plt.plot(loss_vals)
-    
-    del envi, res
-    envi, res = environment(15, 250,30,120,1,0,1)
-    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 600)
-    plt.plot(loss_vals)
-
-    del envi, res
-    envi, res = environment(15, 250,30,120,1,0,1)
-    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 600)
-    plt.plot(loss_vals)
-    
-    del envi, res
-    envi, res = environment(15, 250,30,120,1,0,1)
-    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 600)
-    plt.plot(loss_vals)
-
-    del envi, res
-    envi, res = environment(15, 250,30,120,1,0,1)
-    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 600)
-    plt.plot(loss_vals)
+    for i in range(100):
+        del envi, res
+        envi, res = environment(10, 250,30,120,1,0,1)
+        loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 1000)
+        if i%7 == 0:
+            plt.plot(loss_vals)
 
     create_summary_apriori(net)
     testRes = createTest(net, 250,30,120,1,0,1)

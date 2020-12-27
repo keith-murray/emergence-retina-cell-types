@@ -246,7 +246,7 @@ def create_summary_prior(ret):
 
     
 if __name__ == "__main__":
-    test = scene(250,200,160,0.2,0.05,0.5)
+    test = scene(250,30,120,1,0,1)
     testScene, another = test.createScene()
     fig = plt.figure()
     camera = Camera(fig)
@@ -254,7 +254,7 @@ if __name__ == "__main__":
         plt.imshow(testScene[:,:,i], cmap='hot', interpolation='nearest')
         camera.snap()
     animation = camera.animate()
-    animation.save('testScene.gif', writer = 'pillow', fps=30)
+    animation.save('testScene.gif', writer = 'pillow', fps=10)
 
 
 
