@@ -6,6 +6,7 @@ Created on Fri Nov 27 16:19:56 2020
 """
 import numpy as np
 from celluloid import Camera
+import os
 import seaborn as sns
 import matplotlib.pyplot as plt
 import torch
@@ -59,7 +60,7 @@ class moveObjs():
 
 
 class scene():
-    def __init__(self, pixels, frames, num_objects, perct_unique, direc_var, r_discrim):
+    def __init__(self, pixels, frames, num_objects, perct_unique, direc_var, r_discrim, initAngle=None):
         '''
         Initialization.
         INPUT:
@@ -78,9 +79,12 @@ class scene():
         self.radius = int(pixels/50)
         self.objs = []
         self.index_unique = np.random.choice(num_objects, self.num_unique, replace=False).tolist()
-        self.initial_ang = np.random.random_sample()*2*np.pi
+        if initAngle != None:
+            self.initial_ang = initAngle
+        else:
+            self.initial_ang = np.random.random_sample()*2*np.pi
         self.initial_un_ang = self.initial_ang - np.pi*r_discrim
-        self.variance = direc_var*2*np.pi
+        self.variance = direc_var*np.pi
         
     def findPoints(self, point, fr):
         '''
@@ -101,7 +105,7 @@ class scene():
         initial_positions = [(xChoice[p], yChoice[p]) for p in range(len(xChoice))]
         for p in range(self.num_objects):
             self.findPoints(initial_positions[p], 0)
-            angleVariance = 2*self.variance*np.random.random_sample() - self.variance
+            angleVariance = 2*self.variance*(2*np.random.random_sample()-1) - self.variance
             if p in self.index_unique:
                 self.objs.append(moveObjs(self.dims, self.initial_un_ang + angleVariance, initial_positions[p], unique=True))
             else:
@@ -126,9 +130,31 @@ class scene():
         return self.stack[self.pixels:2*self.pixels,self.pixels:2*self.pixels,:], self.initial_un_ang
 
 
-def mse(t1, t2):
-    diff = t1 - t2
-    return torch.sum(diff * diff) / diff.numel() # + lambda*recreate
+class Dataset(torch.utils.data.Dataset):
+  'Characterizes a dataset for PyTorch'
+  def __init__(self, file_name, list_IDs):
+        'Initialization'
+        self.list_IDs = list_IDs
+        self.file_name = file_name
+
+  def __len__(self):
+        'Denotes the total number of samples'
+        return len(self.list_IDs)
+
+  def __getitem__(self, index):
+        'Generates one sample of data'
+        # Select sample
+        ID = self.list_IDs[index]
+        dirr = 'Q:\Documents\TDS SuperUROP\\'+self.file_name + os.sep + str(ID)
+
+        # Load data and get label
+        X = torch.load(dirr+'\stimulus.pt')
+        y = torch.load(dirr+'\label.pt')
+        return X, y
+
+
+def mse(diff):
+    return -1*(torch.sum(diff * diff) / diff.numel()) # + lambda*recreate
 
 
 def environment(rounds, pixels, frames, num_objects, perct_unique, direc_var, r_discrim):
@@ -176,24 +202,93 @@ def environment(rounds, pixels, frames, num_objects, perct_unique, direc_var, r_
     return envi, res
 
 
+def environment_5_channels(rounds, pixels, frames, num_objects, perct_unique, direc_var, r_discrim, angleUse=None):
+    '''
+    Function environment creates the set of stimuli specified by the parameters given.
+    INPUTS:
+        rounds - number of stimuli to include
+        pixels - number of pixels to include in the horrizontal and vertical direction
+        frames - number of frames to include in each stimuli draw
+        num_objects - number of objects to include in total
+        perct_unique - percent of the objects that go in the nonstandard direction
+        direc_var - variance in the direction from 0 to 1
+        r_discrim - the amount of discrimination in the standard and nonstandard direction (0 - 1)
+    '''
+    stimuli = []
+    cent_loc = []
+    cent_loc1 = None
+    for i in range(rounds):
+        scene1, cent_loc1 = scene(pixels, frames, num_objects, perct_unique, direc_var, r_discrim, initAngle=angleUse).createScene()
+        stimuli.append(scene1)
+        cent_loc.append(cent_loc1)
+
+    envi = None
+    for i, e in enumerate(stimuli):
+        hold = np.moveaxis(e, -1, 0)
+        hold = torch.from_numpy(hold).float()
+        hold_x = torch.unsqueeze(hold,0)
+        for x in range(5):
+            if x == 0:
+                hold = hold_x
+            else:
+                hold = torch.cat((hold, hold_x),0)
+        hold = torch.unsqueeze(hold,0)
+        if envi is None:
+            envi = hold
+        else:
+            envi = torch.cat((envi, hold),0)
+    envi.requires_grad_(True)
+    res = None
+    for i, e in enumerate(cent_loc):
+        hold = np.array(e)
+        hold = torch.from_numpy(hold).float()
+        hold = torch.unsqueeze(hold, 0)
+        if res is None:
+            res = hold
+        else:
+            res = torch.cat((res, hold),0)
+    res.requires_grad_(True)
+    return envi, res
+
+
 def optimize_func(scence, cent_loc, net, num_iter):
     net.train()
     optimizer = torch.optim.Adam(net.parameters())
     x = []
+    cos = torch.nn.CosineSimilarity(dim=0)
     
     for i in range(num_iter):
         optimizer.zero_grad()
         output = net(scence)
-        loss = mse(output, cent_loc)
+        new_out =  torch.stack((torch.cos(output),torch.sin(output)))
+        new_cent_loc =  torch.stack((torch.cos(cent_loc),torch.sin(cent_loc)))
+        loss = mse(cos(new_out, new_cent_loc))
         x.append(loss.item())
-        loss.backward()
+        loss.backward(retain_graph=True)
         optimizer.step()
     return x, loss, output, net
 
 
+def testFunc(scence, cent_loc, net):
+    net.eval()
+    cos = torch.nn.CosineSimilarity(dim=0)
+    output = net(scence)
+    new_out =  torch.stack((torch.cos(output),torch.sin(output)))
+    new_cent_loc =  torch.stack((torch.cos(cent_loc),torch.sin(cent_loc)))
+    loss = mse(cos(new_out, new_cent_loc))
+    x = loss.item()
+    return x
+
+
 def createTest(net, pixels, frames, num_objects, perct_unique, direc_var, r_discrim):
     envi, res = environment(2, pixels, frames, num_objects, perct_unique, direc_var, r_discrim)
-    loss_vals, loss, pred_py, net = optimize_func(envi, res, net, 1)
+    loss_vals, loss, pred_py, net = testFunc(envi, res, net)
+    return loss
+
+
+def createTest5Channel(net, pixels, frames, num_objects, perct_unique, direc_var, r_discrim):
+    envi, res = environment_5_channels(2, pixels, frames, num_objects, perct_unique, direc_var, r_discrim)
+    loss_vals, loss, pred_py, net = testFunc(envi.to(device), res.to(device), net)
     return loss
 
 
@@ -246,15 +341,26 @@ def create_summary_prior(ret):
 
     
 if __name__ == "__main__":
-    test = scene(250,30,120,1,0,1)
-    testScene, another = test.createScene()
-    fig = plt.figure()
-    camera = Camera(fig)
-    for i in range(len(testScene[0,0,:])):
-        plt.imshow(testScene[:,:,i], cmap='hot', interpolation='nearest')
-        camera.snap()
-    animation = camera.animate()
-    animation.save('testScene.gif', writer = 'pillow', fps=10)
+    save_location = 'Q:/Documents/TDS SuperUROP/75_0_50_testset'
+    os.mkdir(save_location)
+    save_location = save_location + os.sep
+    itera = 100
+    for x in range(itera):
+        angl = 2*np.pi*x/itera
+        envi, res = environment_5_channels(1,255,30,200,0.75,0,0.5, angleUse=angl)
+        
+        os.mkdir(save_location+str(x))
+        torch.save(envi, save_location+str(x)+'\stimulus.pt')
+        torch.save(res, save_location+str(x)+'\label.pt')
+    
+    # testScene, another = test.createScene()
+    # fig = plt.figure()
+    # camera = Camera(fig)
+    # for i in range(len(testScene[0,0,:])):
+    #     plt.imshow(testScene[:,:,i], cmap='hot', interpolation='nearest')
+    #     camera.snap()
+    # animation = camera.animate()
+    # animation.save('testScene.gif', writer = 'pillow', fps=10)
 
 
 
