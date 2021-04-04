@@ -28,7 +28,7 @@ class Retinal_NET_binary(nn.Module):
         self.ganglion_temporal = nn.Conv3d(5,5,(51,1,1), stride=(1, 1, 1), padding=(0, 0, 0), bias=True, groups=5)
         self.ganglion_left_create = nn.Conv3d(5,1, (1,49,1), stride=(1, 1, 1), padding=(0, 0, 0), bias=True, groups=1)
         self.ganglion_right_create = nn.Conv3d(5,1, (1,49,1), stride=(1, 1, 1), padding=(0, 0, 0), bias=True, groups=1)
-        self.drop_layer = nn.Dropout(p=0.30)
+        self.drop_layer = nn.Dropout(p=0.00)
         
         self.p1d = (0, 0, 0, 0, 50, 0)
 
@@ -39,7 +39,7 @@ class Retinal_NET_binary(nn.Module):
         cell_ama = torch.unsqueeze(torch.flatten(ama_space,start_dim=3), -1)
         ama_pre_pad = self.drop_layer(self.amacrine_pull(cell_ama[:,:,:,:-2,:]))
         ama_out = self.drop_layer(self.amacrine_alpha(F.relu(self.drop_layer(self.amacrine_temporal(F.pad(ama_pre_pad, self.p1d))))))
-        cell_gang = torch.unsqueeze(torch.roll(torch.flatten(gang_space,start_dim=3), -5, -1), -1)
+        cell_gang = torch.unsqueeze(torch.roll(torch.flatten(gang_space,start_dim=3), -25, -1), -1)
         gang_pre_pad = self.drop_layer(self.ganglions_pull(cell_gang[:,:,:,:-2,:]))
         gang_out = self.drop_layer(self.ganglion_temporal(F.pad(gang_pre_pad,self.p1d)))
         ganglion_tot = self.drop_layer(F.relu(torch.sub(gang_out,torch.abs(ama_out))))
@@ -53,15 +53,19 @@ class Retinal_NET_binary(nn.Module):
 
 if __name__ == "__main__":
     net = Retinal_NET_binary().to(device)
+    model_name = input('Load file: ')
+    load_loc = 'Q:\Documents\TDS SuperUROP' + os.sep + model_name + os.sep + 'model.pt'
+    net.load_state_dict(torch.load(load_loc))
+    
     save_loc = input('Save file: ')
     save_loc = 'Q:\Documents\TDS SuperUROP\\' + save_loc    
     os.mkdir(save_loc)
     
     # Parameters
-    params = {'batch_size': 9,
+    params = {'batch_size': 8,
               'shuffle': True,
               'num_workers': 0}
-    max_epochs = 4
+    max_epochs = 1
     
     test_params = {'batch_size': 2,
               'shuffle': True,
@@ -85,12 +89,11 @@ if __name__ == "__main__":
         for local_batch, local_labels in training_generator:
             # Transfer to GPU
             local_batch, local_labels = reConfigure(local_batch, local_labels, device)
-            loss_vals, pred_py, net = optimize_func(local_batch, local_labels, net, 200)
-            if count%20 == 0:
+            loss_vals, pred_py, net = optimize_func(local_batch, local_labels, net, 50)
+            if count%10 == 0:
                 plt.plot(loss_vals)
             count += 1
-        
-        net.drop_layer.p = net.drop_layer.p / 3
+    
         # Testing
         net.eval()
         testStore = []
