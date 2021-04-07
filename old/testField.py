@@ -52,6 +52,7 @@ class Retinal_NET_binary(nn.Module):
     
     def newFor(self, x):
         bipolar_out = F.relu(self.bipolar_temporal(F.pad(self.bipolar_space(x), self.p1d)))
+        print(F.pad(self.bipolar_space(x), self.p1d).shape)
         # ama_space = self.amacrine_space(bipolar_out)
         gang_space = self.ganglions_space(bipolar_out)
         # cell_ama = torch.unsqueeze(torch.flatten(ama_space,start_dim=3), -1)
@@ -117,28 +118,28 @@ if __name__ == "__main__":
         net.load_state_dict(weights)
         net.eval()
         
-        # stimulus1 = torch.load('Q:/Documents/TDS SuperUROP/testset_binary_2_sparse_slow/9/stimulus.pt')
-        # stimulus2 = torch.load('Q:/Documents/TDS SuperUROP/testset_binary_2_sparse_slow/2/stimulus.pt')
-        # stimulus = torch.cat((stimulus1,stimulus2), dim=0).to(device)
-        # estimation = net.newFor(stimulus)
+        stimulus1 = torch.load('Q:/Documents/TDS SuperUROP/testset_binary_2_sparse_slow/9/stimulus.pt')
+        stimulus2 = torch.load('Q:/Documents/TDS SuperUROP/testset_binary_2_sparse_slow/2/stimulus.pt')
+        stimulus = torch.cat((stimulus1,stimulus2), dim=0).to(device)
+        estimation = net.newFor(stimulus)
         
         # plotStimulus(stimulus1)
         
-        test_labels = range(50)
-        test_params = {'batch_size': 10,
-                  'shuffle': True,
-                  'num_workers': 0}
-        test_set = Dataset('testset_binary_2_sparse',test_labels)
-        test_generator = torch.utils.data.DataLoader(test_set, **test_params)
-        testStore = []
-        testRun = 0
-        for local_batch, local_labels in test_generator:
-            local_batch, local_labels = reConfigure(local_batch, local_labels, device)
-            loss = evalFunc(local_batch, local_labels, net)
-            testStore.append(loss)
-            testRun += loss
-        results.append(testRun/len(testStore))
-        print(testRun/len(testStore))
+        # test_labels = range(50)
+        # test_params = {'batch_size': 10,
+        #           'shuffle': True,
+        #           'num_workers': 0}
+        # test_set = Dataset('testset_binary_2_sparse',test_labels)
+        # test_generator = torch.utils.data.DataLoader(test_set, **test_params)
+        # testStore = []
+        # testRun = 0
+        # for local_batch, local_labels in test_generator:
+        #     local_batch, local_labels = reConfigure(local_batch, local_labels, device)
+        #     loss = evalFunc(local_batch, local_labels, net)
+        #     testStore.append(loss)
+        #     testRun += loss
+        # results.append(testRun/len(testStore))
+        # print(testRun/len(testStore))
     # plt.plot(range(100),results)
     # plt.xlabel('Roll Factor')
     # plt.ylabel('Test accuracy')
