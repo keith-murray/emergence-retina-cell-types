@@ -100,7 +100,7 @@ class scene():
             self.initial_ang = np.random.random_sample()*2*np.pi
         self.initial_un_ang = self.initial_ang - np.pi*r_discrim
         self.variance = direc_var*np.pi
-        self.control_speed = np.random.random_sample()/2 + 0.75
+        self.control_speed = np.random.random_sample() + 0.5
         
     def findPoints(self, point, fr):
         '''
@@ -250,11 +250,13 @@ def createDataTest(fileName,speedDiscrim,dataNum,testNum):
 
     '''
     save_location = 'Q:/Documents/TDS SuperUROP' + os.sep
-    createSet(save_location+'dataset_'+fileName,dataNum,0.5,speedDiscrim)
-    createSet(save_location+'testset_'+fileName,testNum,0.5,speedDiscrim)
+    if dataNum > 0:
+        createSet(save_location+'dataset_'+fileName,dataNum,0.5,speedDiscrim)
+    if testNum > 0:
+        createSet(save_location+'testset_'+fileName,testNum,0.5,speedDiscrim)
 
 
-def plotStimulus(testSet):
+def plotStimulus(testSet, name):
     '''
     testSet = 'binary_75_3_testset'
     '''
@@ -265,13 +267,13 @@ def plotStimulus(testSet):
         plt.imshow(test[i,:,:], cmap='hot', interpolation='nearest')
         camera.snap()
     animation = camera.animate()
-    animation.save('Q:/Documents/TDS SuperUROP/testScene.gif', writer = 'pillow', fps=30)
+    animation.save('Q:/Documents/TDS SuperUROP/'+name+'.gif', writer = 'pillow', fps=30)
     return
 
 
 if __name__ == "__main__":
-    createDataTest('2_5x_speed',2.5,1000,100)
-    plotStimulus(torch.load('Q:/Documents/TDS SuperUROP/dataset_2_5x_speed/0/stimulus.pt'))
+    createDataTest('2x_speed',2,1000,100)
+    # plotStimulus(torch.load('Q:/Documents/TDS SuperUROP/dataset_2_5x_speed/0/stimulus.pt'))
     
     
     
