@@ -74,7 +74,7 @@ class moveObjs():
 
 
 class scene():
-    def __init__(self, pixels, frames, num_objects, perct_unique, direc_var, r_discrim, speed_diff, initAngle=None):
+    def __init__(self, pixels, frames, num_objects, perct_unique, direc_var, r_discrim, speed_diff, initAngle=None, slow_vel=None):
         '''
         Initialization.
         INPUT:
@@ -94,13 +94,16 @@ class scene():
         self.objs = []
         self.index_unique = np.random.choice(num_objects, self.num_unique, replace=False).tolist()
         self.speed = speed_diff
-        if initAngle != None:
+        if initAngle is not None:
             self.initial_ang = initAngle
         else:
             self.initial_ang = np.random.random_sample()*2*np.pi
         self.initial_un_ang = self.initial_ang - np.pi*r_discrim
         self.variance = direc_var*np.pi
-        self.control_speed = np.random.random_sample() + 0.5
+        if slow_vel is not None:
+            self.control_speed = slow_vel
+        else:
+            self.control_speed = np.random.random_sample() + 0.5
         
     def findPoints(self, point, fr):
         '''
@@ -146,7 +149,7 @@ class scene():
         return self.stack[self.pixels:2*self.pixels,self.pixels:2*self.pixels,:], self.initial_un_ang
 
 
-def environment(pixels, frames, num_objects, perct_unique, speed_diff, right=True):
+def environment(pixels, frames, num_objects, perct_unique, speed_diff, right=True, slow_speed=None):
     '''
     Function environment creates the set of stimuli specified by the parameters given.
     INPUTS:
@@ -166,7 +169,8 @@ def environment(pixels, frames, num_objects, perct_unique, speed_diff, right=Tru
     stimuli = []
     cent_loc = []
     cent_loc1 = None
-    scene1, cent_loc1 = scene(pixels, frames, num_objects, perct_unique, direc_var, r_discrim, speed_diff, initAngle=angleUse).createScene()
+    scene1, cent_loc1 = scene(pixels, frames, num_objects, perct_unique, direc_var, 
+                              r_discrim, speed_diff, initAngle=angleUse, slow_vel=slow_speed).createScene()
     stimuli.append(scene1)
     cent_loc.append(cent_loc1)
 
@@ -198,10 +202,8 @@ def environment(pixels, frames, num_objects, perct_unique, speed_diff, right=Tru
     return envi, res
 
 
-def createSet(save_location,itera,dotDiscrim,speedDiscrim):
+def createSet(save_location,itera,dotDiscrim,speedDiscrim,slow_vel=None):
     '''
-    
-
     Parameters
     ----------
     save_location : TYPE
@@ -225,16 +227,49 @@ def createSet(save_location,itera,dotDiscrim,speedDiscrim):
             left_right = True
         else:
             left_right = False
-        stim, res = environment(255,51,150,dotDiscrim,speedDiscrim, right=left_right)
+        stim, res = environment(255,51,150,dotDiscrim,speedDiscrim, right=left_right, slow_speed=slow_vel)
         
         os.mkdir(save_location+str(x))
         torch.save(stim, save_location+str(x)+'\stimulus.pt')
         torch.save(res, save_location+str(x)+'\label.pt')
 
-def createDataTest(fileName,speedDiscrim,dataNum,testNum):
-    '''
-    
 
+def createSet_definedDist(save_location,itera,speedDiscrim,slow_vel):
+    '''
+    Parameters
+    ----------
+    save_location : TYPE
+        save_location = 'Q:/Documents/TDS SuperUROP/binary_50_1_dataset'
+    itera : TYPE
+        itera = 250
+    dotDiscrim : TYPE
+        dotDiscrim = .75
+    speedDiscrim : TYPE
+        speedDiscrim = 3
+
+    Returns
+    -------
+    None.
+    '''
+    save_location = 'Q:/Documents/TDS SuperUROP' + os.sep + save_location
+    os.mkdir(save_location)
+    save_location = save_location + os.sep
+    left_right_ind = np.random.randint(0, high=2, size=itera, dtype=int)
+    for x in range(itera):
+        if left_right_ind[x] == 1:
+            left_right = True
+        else:
+            left_right = False
+        choosen_velocity = slow_vel()
+        stim, res = environment(255,51,150,0.5,speedDiscrim, right=left_right, slow_speed=choosen_velocity)
+        
+        os.mkdir(save_location+str(x))
+        torch.save(stim, save_location+str(x)+'\stimulus.pt')
+        torch.save(res, save_location+str(x)+'\label.pt')
+
+
+def createDataTest(fileName,speedDiscrim,dataNum,testNum,slow_speed=None):
+    '''
     Parameters
     ----------
     fileName : 'binary_50_1'
@@ -251,9 +286,9 @@ def createDataTest(fileName,speedDiscrim,dataNum,testNum):
     '''
     save_location = 'Q:/Documents/TDS SuperUROP' + os.sep
     if dataNum > 0:
-        createSet(save_location+'dataset_'+fileName,dataNum,0.5,speedDiscrim)
+        createSet(save_location+'dataset_'+fileName,dataNum,0.5,speedDiscrim,slow_vel=slow_speed)
     if testNum > 0:
-        createSet(save_location+'testset_'+fileName,testNum,0.5,speedDiscrim)
+        createSet(save_location+'testset_'+fileName,testNum,0.5,speedDiscrim,slow_vel=slow_speed)
 
 
 def plotStimulus(testSet, name):
@@ -264,10 +299,10 @@ def plotStimulus(testSet, name):
     camera = Camera(fig)
     test = testSet.cpu().detach().numpy()[0,0,:,:,:]
     for i in range(test.shape[0]):
-        plt.imshow(test[i,:,:], cmap='hot', interpolation='nearest')
+        plt.imshow(test[i,:,:], cmap='hot', vmin=-2.0, vmax=2.0)
         camera.snap()
     animation = camera.animate()
-    animation.save('Q:/Documents/TDS SuperUROP/'+name+'.gif', writer = 'pillow', fps=30)
+    animation.save('Q:/Documents/TDS SuperUROP/'+name+'.gif', writer = 'pillow', fps=15)
     return
 
 

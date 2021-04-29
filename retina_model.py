@@ -108,6 +108,72 @@ self.ganglion_cells.append(self.ganglion{0})
         return decision
 
 
+class AnalysisModel(nn.Module):
+    def __init__(self, types, drop):
+        super(AnalysisModel, self).__init__()
+        self.bipolar_cells = []
+        self.amacrine_cells = []
+        self.ganglion_cells = []
+        
+        for i in range(types): # BEWARE: Very hacky code below, be CAUTIOUS
+            exec("""
+self.bipolar{0} = Bipolar(drop)
+self.bipolar_cells.append(self.bipolar{0})
+self.amacrine{0} = Amacrine(drop, types)
+self.amacrine_cells.append(self.amacrine{0})
+self.ganglion{0} = Ganglion(drop, types)
+self.ganglion_cells.append(self.ganglion{0})
+                 """.format(i)) # Scary code done now, always be cautious of exec()
+        
+        self.decisionLeft = Decision(drop, types)
+        self.decisionRight = Decision(drop, types)
+
+    def forward(self, stimulus):
+        bipolar_outputs = [cell(stimulus) for cell in self.bipolar_cells]
+        bipolar = torch.cat(bipolar_outputs, 1)
+        
+        amacrine_outputs = [cell(bipolar) for cell in self.amacrine_cells]
+        amacrine = torch.cat(amacrine_outputs, 1)
+        
+        ganglion_outputs = [cell(bipolar, amacrine) for cell in self.ganglion_cells]
+        ganglion = torch.cat(ganglion_outputs, 1)
+        
+        dcsnLeft = self.decisionLeft(ganglion)
+        dcsnRight = self.decisionRight(ganglion)
+        decision = torch.cat((dcsnLeft, dcsnRight), 1)[:,:,-1,0,0]
+        return decision
+    
+    def deepdream(self, stimulus):
+        bipolar_outputs = [cell(stimulus) for cell in self.bipolar_cells]
+        bipolar = torch.cat(bipolar_outputs, 1)
+        
+        amacrine_outputs = [cell(bipolar) for cell in self.amacrine_cells]
+        amacrine = torch.cat(amacrine_outputs, 1)
+        
+        ganglion_outputs = [cell(bipolar, amacrine) for cell in self.ganglion_cells]
+        ganglion = torch.cat(ganglion_outputs, 1)
+        
+        dcsnLeft = self.decisionLeft(ganglion)
+        dcsnRight = self.decisionRight(ganglion)
+        decision = torch.cat((dcsnLeft, dcsnRight), 1)[:,:,-1,0,0]
+        return -1*(torch.sum(ganglion_outputs[0][0,0,:,8,8])) # + torch.sum(ganglion_outputs[1][0,0,:,4,4]))
+        # return (torch.sum(bipolar_outputs[0][0,0,:,10:11,10:11]) + torch.sum(bipolar_outputs[0][0,0,:,30:31,30:31]))
+    
+    def extractstage(self, stimulus):
+        bipolar_outputs = [cell(stimulus) for cell in self.bipolar_cells]
+        bipolar = torch.cat(bipolar_outputs, 1)
+        
+        amacrine_outputs = [cell(bipolar) for cell in self.amacrine_cells]
+        amacrine = torch.cat(amacrine_outputs, 1)
+        
+        ganglion_outputs = [cell(bipolar, amacrine) for cell in self.ganglion_cells]
+        ganglion = torch.cat(ganglion_outputs, 1)
+        
+        dcsnLeft = self.decisionLeft(ganglion)
+        dcsnRight = self.decisionRight(ganglion)
+        return bipolar_outputs, amacrine_outputs, ganglion_outputs, dcsnLeft, dcsnRight
+
+
 class Dataset(torch.utils.data.Dataset):
   'Characterizes a dataset for PyTorch'
   def __init__(self, file_name, list_IDs):
@@ -196,41 +262,41 @@ def OptimizeModel(net, dataset, label, epochs, iterations):
                 optimizer.step()
                 net.apply(weightClipper)
             
-            if TestModel(net, 'testset_'+dataset, 100) == 1.00:
+            if TestModel(net, 'testset_'+dataset, 100, printTF=True) == 1.00:
                 break
             
     print('Finished Training')
 
 
 def CompareTensors(outputs, labels):
-    right_decisions = []
-    for i in range(outputs.shape[0]):
-        if outputs[i,1] > outputs[i,0]:
-            right_decisions.append(1)
-        else:
-            right_decisions.append(0)
-    right_decisions = torch.tensor(right_decisions).to(device)
-    compare = torch.eq(right_decisions, labels[:,1])
+    right_decisions = outputs[:,1] - outputs[:,0]
+    compare = torch.eq(right_decisions > 0, labels[:,1] > 0.5)
     return torch.sum(compare)
 
 
-def TestModel(net, data, label):    
+def TestModel(net, data, label, printTF=False, label_dis=False):
     # Datasets
     testfunc = Dataset(data,range(label))
-    testloader = torch.utils.data.DataLoader(testfunc, batch_size=10, shuffle=True, num_workers=0)
+    testloader = torch.utils.data.DataLoader(testfunc, batch_size=int(label/2), shuffle=True, num_workers=0)
     
     # Enable Testing
     net.eval()
+    label_store = torch.zeros(2).to(device)
     
     # Test    
     running_loss = 0
     for i, data in enumerate(testloader, 0):
         inputs, labels = reConfigure(data)
+        label_store = label_store + torch.sum(labels, 0)
         outputs = net(inputs)
         running_loss += CompareTensors(outputs, labels)
         
-    print('Acuracy: %.2f' % (running_loss/label))
-    return running_loss/label
+    if printTF:
+        print('Acuracy: %.2f' % (running_loss/label))
+    if label_dis:
+        return running_loss/label, label_store/label
+    else:
+        return running_loss/label
 
 
 if __name__ == "__main__":
