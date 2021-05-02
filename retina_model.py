@@ -299,6 +299,45 @@ def TestModel(net, data, label, printTF=False, label_dis=False):
         return running_loss/label
 
 
+def CompareTensors_LeftRight(outputs, labels):
+    right_decisions = outputs[:,1] - outputs[:,0]
+    out = right_decisions > 0
+    label = labels[:,1] > 0.5
+    compare = torch.eq(out, label)
+    left = torch.logical_not(torch.logical_or(out, label))
+    right = torch.logical_and(out, label)
+    return torch.sum(compare), torch.sum(left), torch.sum(right)
+
+
+def tens_np(tens):
+    return tens.cpu().detach().numpy()
+
+
+def TestModel_LeftRight(net, data, label):
+    # Datasets
+    testfunc = Dataset(data,range(label))
+    testloader = torch.utils.data.DataLoader(testfunc, batch_size=int(label/2), shuffle=True, num_workers=0)
+    
+    # Enable Testing
+    net.eval()
+    label_store = torch.zeros(2).to(device)
+    
+    # Test    
+    running_loss = 0
+    running_left = 0
+    running_right = 0
+    for i, data in enumerate(testloader, 0):
+        inputs, labels = reConfigure(data)
+        label_store = label_store + torch.sum(labels, 0)
+        outputs = net(inputs)
+        temp_loss, temp_left, temp_right = CompareTensors_LeftRight(outputs, labels)
+        running_loss += temp_loss
+        running_left += temp_left
+        running_right += temp_right
+    
+    return tens_np(running_loss/label), tens_np(running_left/running_loss), tens_np(running_right/running_loss)
+
+
 if __name__ == "__main__":
     net = RetinaModel(8, 0.40).to(device)
     OptimizeModel(net, '2x_speed', 1000, 5, 500)
