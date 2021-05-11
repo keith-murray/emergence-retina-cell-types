@@ -16,10 +16,11 @@ import random
 import itertools
 import numpy as np
 import json
+import seaborn as sns
 
 device = torch.device("cuda:0")
 
-def PsychometricCurveAnalysis(types,model):
+def PsychometricCurveAnalysis(types,model,create=False):
     net = AnalysisModel(types, 0.00).to(device)
     save_loc = 'Q:\Documents\TDS SuperUROP\\'+model+'.pt'
     weights = torch.load(save_loc)
@@ -29,10 +30,10 @@ def PsychometricCurveAnalysis(types,model):
     results = []
     
     for x in range(0,41):
-        createDataTest('psychometric' , x/10, 0, 100)
-        accuracy = TestModel(net, 'testset_psychometric', 100)
-        results.append(accuracy)
-        shutil.rmtree('Q:/Documents/TDS SuperUROP/testset_psychometric')
+        if create:
+            createDataTest('psychometric_'+str(x) , x/10, 0, 100)
+        accuracy = TestModel(net, 'testset_psychometric_'+str(x), 100)
+        results.append(accuracy.item())
         
     for x in range(0,41):
         if x < 10:
@@ -107,17 +108,18 @@ def FindRelevantTypes(types, model, testset, threshold, exist=None):
     ax.plot(resultsA, 'r')
     ax.plot(resultsG, 'g')
     ax.plot([threshold*base_result for i in range(len(resultsB))], 'p-')
-    ax.plot([label_dists[0].item() for i in range(len(resultsB))], 'm+')
-    ax.plot([label_dists[1].item() for i in range(len(resultsB))], 'k+')
+    # ax.plot([label_dists[0].item() for i in range(len(resultsB))], 'm+')
+    # ax.plot([label_dists[1].item() for i in range(len(resultsB))], 'k+')
 
-    plt.xlabel('Cell Type Leissioned')
-    plt.ylabel('Accuracy')
-    plt.title('Leissioning Cell Types to Affect Accuracy')
+    ax.set_xlabel('Cell Type Leissioned')
+    ax.set_xlabel('Accuracy')
+    ax.set_title('Leissioning Cell Types to Affect Accuracy')
     plt.show()
+    ax.savefig('lesion_full_model.svg')
     
     if exist is not None:
         net.load_state_dict(state)
-    return [resultsB, resultsA, resultsG]
+    return [resultsB, resultsA, resultsG, threshold*base_result]
 
 
 def scramble(net):
@@ -316,7 +318,7 @@ def TrainDeepDream(types, model, dream, epochs, iterations):
     print('Finished Training')
 
 
-def DifferentStages(types, model, testset, num, stim=None):
+def DifferentStages(types, model, testset, num, stim=None, left=True):
     net = AnalysisModel(types, 0.00).to(device)
     save_loc = 'Q:\Documents\TDS SuperUROP\\'+model+'.pt'
     weights = torch.load(save_loc)
@@ -347,6 +349,10 @@ def DifferentStages(types, model, testset, num, stim=None):
     plt.ylabel('Response')
     plt.title('Right and Left Cell Responses')
     plt.legend()
+    if left:
+        plt.savefig('left_stim_res.svg')
+    else:
+        plt.savefig('right_stim_res.svg')
     plt.show()
 
 
@@ -435,11 +441,10 @@ def ResponsesAcrossDifferentStages(types, model):
     
     all_stage_activations = []
     
-    for x in range(5,21):
-        createDataTest('slow_velocity', 2, 0, 50, slow_speed=x/10)
-        stage_activities = ExtractStageActivations(net, 'testset_slow_velocity', 50)
+    for i in range(0,34):
+        testset = 'testset_2x_'+str(i)+'_dist'
+        stage_activities = ExtractStageActivations(net, testset, 50)
         all_stage_activations.append(stage_activities)
-        shutil.rmtree('Q:/Documents/TDS SuperUROP/testset_slow_velocity')
     
     results = np.array(all_stage_activations).T
     count = 0
@@ -448,12 +453,13 @@ def ResponsesAcrossDifferentStages(types, model):
         fig = plt.figure()
         ax = plt.axes()
         for y in range(types):
-            ax.plot([x/10 for x in range(5,21)],results[count, :], label=str(y))
+            ax.plot([x*0.03 + 0.50 for x in range(0,34)],results[count, :], label=str(y))
             count += 1
         plt.xlabel('Slow Velocity')
         plt.ylabel('Average Response Magnitude')
         plt.title(x+' Type Average Response Magnitude across Slow Velocities')
         plt.legend()
+        plt.savefig(x+'_activations.svg')
         plt.show()
     
     return results
@@ -618,13 +624,45 @@ def BipolarAmacrineSubstitute():
             ax.set_xlabel('Slow Velocity')
             ax.set_ylabel('Model Accuracy')
             plt.savefig('Q:/Documents/TDS SuperUROP\\model\\combination_graphs\\graph_'+str(b)+'_'+str(a)+'.svg')
-            plt.show()    
+            plt.show()
 
     # json_dump = json.dumps(model_results)
     # f = open("Q:/Documents/TDS SuperUROP\\model\\combinations.json","w")
     # f.write(json_dump)
     # f.close()
     return model_results
+
+
+def TruncatedModelSlowCurve(types, model, sace):
+    left_accuracy = []
+    right_accuracy = []
+    net = AnalysisModel(types, 0.00).to(device)
+    save_loc = 'Q:\Documents\TDS SuperUROP\\'+model+'.pt'
+    weights = torch.load(save_loc)
+    net.load_state_dict(weights)
+    net.eval()
+    
+    for i in range(0,34):
+        testset = 'testset_2x_'+str(i)+'_dist'
+        base_res, left, right = TestModel_LeftRight(net, testset, 100)
+        left = base_res*left
+        right = base_res*right
+        left_accuracy.append(left.item())
+        right_accuracy.append(right.item())
+        
+    current_results = {'Left Accuracy': left_accuracy, 'Right Accuracy': right_accuracy}
+    velocity_labels = [x*0.03 + 0.50 for x in range(0,34)]
+    
+    fig, ax = plt.subplots()
+    ax.stackplot(velocity_labels, current_results.values(),
+                 labels=current_results.keys())
+    ax.legend(loc='upper left')
+    ax.set_title('Slow Velocity Curve for Truncated Model')
+    ax.set_xlabel('Slow Velocity')
+    ax.set_ylabel('Model Accuracy')
+    plt.savefig(sace+'.svg')
+    plt.show()
+    return None
 
 
 if __name__ == "__main__":
@@ -694,6 +732,78 @@ if __name__ == "__main__":
     # ExamineAmacrineResponsesinTruncated(2, 'Bipolar', 'testset_top_dist')
     
     # TestsetVelocityDist()
-    BipolarAmacrineSubstitute()
+    # BipolarAmacrineSubstitute()
+    # TruncatedModelSlowCurve()
+
+    # result_full = PsychometricCurveAnalysis(8,'model\\model',create=False)
+    # np.save('Q:/Documents/TDS SuperUROP/model/psycho_alpha_full.npy', result_full)
+    # result_ablated = PsychometricCurveAnalysis(2,'model\\model_top_dist',create=False)
+    # np.save('Q:/Documents/TDS SuperUROP/model/psycho_alpha_ablated.npy', result_ablated)
+    # for i in [0]:
+    #     plt.plot([x/10 for x in range(0,41)],result_full, label='Full')
+    #     plt.plot([x/10 for x in range(0,41)],result_ablated,label='Ablated')
+    #     plt.legend()
+    #     plt.xlabel('Ratio between Velocities')
+    #     plt.ylabel('Accuracy')
+    #     plt.title('Model accuracy in varied environments')
+    #     plt.savefig('psycho_alpha.svg')
+    #     plt.show()
+
+    # TruncatedModelSlowCurve(8, 'model\\model', 'full_model_stack')
+    # TruncatedModelSlowCurve(2, 'model\\model_top_dist', 'ablated_model_stack')
+    # [resultsB, resultsA, resultsG, thresh] = FindRelevantTypes(8, 'model\\model', 'testset_2x_speed', 0.95)
+    ResponsesAcrossDifferentStages(8, 'model\\model')
+    
+    # TruncatedModelSlowCurve(2, 'model\\model_top_dist_san_bipolar', 'ablated_model_stack_san_bipolar')
+    # TruncatedModelSlowCurve(2, 'model\\model_top_dist_san_ama', 'ablated_model_stack_san_ama')
+    # TruncatedModelSlowCurve(2, 'model\\model_top_dist_ganglion0', 'ablated_model_stack_ganglion0')
+    # TruncatedModelSlowCurve(2, 'model\\model_top_dist_ganglion1', 'ablated_model_stack_ganglion1')
+    
+    DifferentStages(2,'model\\model_top_dist',None,None,stim=torch.load('Q:/Documents/TDS SuperUROP/model/top dist/left ganglion/left_cell_stim.pt'), left=True)
+    DifferentStages(2,'model\\model_top_dist',None,None,stim=torch.load('Q:/Documents/TDS SuperUROP/model/top dist/right ganglion/right_cell_stim.pt'), left=False)
+    
+    # save_loc = 'Q:\Documents\TDS SuperUROP\\model\\model_top_dist.pt'
+    # weights = torch.load(save_loc)
+    # for i in [1]:
+    #     sns.heatmap(tens_np(torch.squeeze(weights['bipolar0.bipolar_space.weight'])))
+    #     plt.savefig('bipolar_spacial.svg')
+        
+    #     plt.plot(tens_np(torch.squeeze(weights['bipolar0.bipolar_temporal.weight'])))
+    #     plt.savefig('bipolar_temporal.svg')
+        
+    #     sns.heatmap(tens_np(torch.squeeze(weights['amacrine0.amacrine_space.weight'])[0,:,:]))
+    #     plt.savefig('amacrine_spacial.svg')
+        
+    #     plt.plot(tens_np(torch.squeeze(weights['amacrine0.amacrine_temporal.weight'])))
+    #     plt.savefig('amacrine_temporal.svg')
+        
+    #     sns.heatmap(tens_np(torch.squeeze(weights['ganglion0.ganglion_amacrine_space.weight'])[0,:,:]))
+    #     plt.savefig('ganglion_ama_space_0.svg')
+
+    #     sns.heatmap(tens_np(torch.squeeze(weights['ganglion1.ganglion_amacrine_space.weight'])[0,:,:]))
+    #     plt.savefig('ganglion_ama_space_1.svg')
+    
+    # left_gang = tens_np(torch.load('Q:/Documents/TDS SuperUROP/model/top dist/left ganglion/left_cell_stim.pt'))
+    # plt.imshow(left_gang[0,0,0,120:220,130:230], cmap='hot', vmin=-2.0, vmax=2.0)
+    # plt.savefig('left_deep_1.svg')
+    # plt.imshow(left_gang[0,0,30,120:220,130:230], cmap='hot', vmin=-2.0, vmax=2.0)
+    # plt.savefig('left_deep_2.svg')
+    # plt.imshow(left_gang[0,0,50,120:220,130:230], cmap='hot', vmin=-2.0, vmax=2.0)
+    # plt.savefig('left_deep_3.svg')
+    
+    # right_gang = tens_np(torch.load('Q:/Documents/TDS SuperUROP/model/top dist/right ganglion/right_cell_stim.pt'))
+    # plt.imshow(right_gang[0,0,0,120:220,130:230], cmap='hot', vmin=-2.0, vmax=2.0)
+    # plt.savefig('right_deep_1.svg')
+    # plt.imshow(right_gang[0,0,30,120:220,130:230], cmap='hot', vmin=-2.0, vmax=2.0)
+    # plt.savefig('right_deep_2.svg')
+    # plt.imshow(right_gang[0,0,50,120:220,130:230], cmap='hot', vmin=-2.0, vmax=2.0)
+    # plt.savefig('right_deep_3.svg')
     
     print('Fin.')
+    
+    
+    
+    
+    
+    
+    

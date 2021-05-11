@@ -9,6 +9,7 @@ import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import matplotlib.pyplot as plt
 
 device = torch.device("cuda:0")
 
@@ -237,12 +238,13 @@ def reConfigure(data):
 def OptimizeModel(net, dataset, label, epochs, iterations):    
     # Datasets
     trainfunc = Dataset('dataset_'+dataset,range(label))
-    trainloader = torch.utils.data.DataLoader(trainfunc, batch_size=25, shuffle=True, num_workers=0)
+    trainloader = torch.utils.data.DataLoader(trainfunc, batch_size=15, shuffle=True, num_workers=0)
     
     # Optimize and Loss
     optimizer = torch.optim.Adam(net.parameters())
     lossfunc = torch.nn.CrossEntropyLoss()
     weightClipper = WeightReinforcer(lower_bound=0.0)
+    loss_results = []
     
     # Train
     for epoch in range(epochs):
@@ -254,18 +256,20 @@ def OptimizeModel(net, dataset, label, epochs, iterations):
                 optimizer.zero_grad()
                 outputs = net(inputs)
                 loss = lossfunc(outputs, labels[:,1].long())
-                if CompareTensors(outputs, labels).item() == 25:
-                    print(loss.item())
-                    print(r)
-                    break
+                # if CompareTensors(outputs, labels).item() == 25:
+                #     print(loss.item())
+                #     print(r)
+                #     break
                 loss.backward(retain_graph=True)
                 optimizer.step()
                 net.apply(weightClipper)
             
-            if TestModel(net, 'testset_'+dataset, 100, printTF=True) == 1.00:
-                break
+            # if TestModel(net, 'testset_'+dataset, 100, printTF=True) == 1.00:
+            #     break
+        loss_results.append(loss.item())
             
     print('Finished Training')
+    return loss_results
 
 
 def CompareTensors(outputs, labels):
@@ -340,8 +344,9 @@ def TestModel_LeftRight(net, data, label):
 
 if __name__ == "__main__":
     net = RetinaModel(8, 0.40).to(device)
-    OptimizeModel(net, '2x_speed', 1000, 5, 500)
-    # torch.save(net.state_dict(), 'Q:\Documents\TDS SuperUROP\\model_2x.pt')
+    loss = OptimizeModel(net, '2x_speed', 1000, 1000, 1)
+    torch.save(net.state_dict(), 'Q:\Documents\TDS SuperUROP\\model_graph.pt')
+    plt.plot(loss)
     
     
     
