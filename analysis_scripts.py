@@ -665,13 +665,13 @@ def BipolarSubstitute():
         right_accuracy = []
         only_right_accuracy = []
         net = AnalysisModel(2, 0.00).to(device)
-        save_loc = 'Q:\Documents\TDS SuperUROP\\model\\model_bipolar_'+str(b)+'.pt'
+        save_loc = '../retina_model_models/model_bipolar_'+str(b)+'.pt'
         weights = torch.load(save_loc)
         net.load_state_dict(weights)
         net.eval()
         
         for i in range(0,51):
-            testset = '1x_'+str(i)+'_dist'
+            testset = 'retina_model_datasets/1x_'+str(i)+'_dist'
             base_res, left, right, only_right = TestModel_LeftRight(net, testset, 30)
             left = base_res*left
             right = base_res*right
@@ -690,13 +690,13 @@ def BipolarSubstitute():
     ax.set_title('Slow Velocity Curve for Bipolar '+str(b))
     ax.set_xlabel('Fast Velocity')
     ax.set_ylabel('Model Accuracy')
-    plt.savefig('Q:/Documents/TDS SuperUROP\\model\\combination_graphs\\graph_fast_bipolar_'+str(b)+'.svg')
+    plt.savefig('graph_fast_bipolar_'+str(b)+'.svg')
     plt.show()
 
-    # json_dump = json.dumps(model_results)
-    # f = open("Q:/Documents/TDS SuperUROP\\model\\bipolar_empha.json","w")
-    # f.write(json_dump)
-    # f.close()
+    json_dump = json.dumps(model_results)
+    f = open("bipolar_empha.json","w")
+    f.write(json_dump)
+    f.close()
     return model_results[str(y)][2]
 
 
@@ -907,7 +907,7 @@ if __name__ == "__main__":
     
     # BipolarSubstitute()
     # BipolarPrune(8, 'model\\model')
-    # res = BipolarSubstitute()
+    res = BipolarSubstitute()
     print('Fin.')
     
     
