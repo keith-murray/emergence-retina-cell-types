@@ -291,6 +291,59 @@ def createDataTest(fileName,speedDiscrim,dataNum,testNum,slow_speed=None):
         createSet(save_location+'testset_'+fileName,testNum,0.5,speedDiscrim,slow_vel=slow_speed)
 
 
+def createSet_definedDist_direction(save_location,slow_vel):
+    '''
+    Parameters
+    ----------
+    save_location : TYPE
+        save_location = 'Q:/Documents/TDS SuperUROP/binary_50_1_dataset'
+    itera : TYPE
+        itera = 250
+    dotDiscrim : TYPE
+        dotDiscrim = .75
+    speedDiscrim : TYPE
+        speedDiscrim = 3
+
+    Returns
+    -------
+    None.
+    '''
+    save_location = 'Q:/Documents/TDS SuperUROP' + os.sep + save_location
+    # os.mkdir(save_location)
+    save_location = save_location + os.sep
+    # for x in range(15):
+    #     left_right = True
+    #     stim, res = environment(255,51,150,1,1, right=left_right, slow_speed=slow_vel)
+        
+    #     os.mkdir(save_location+str(x))
+    #     torch.save(stim, save_location+str(x)+'\stimulus.pt')
+    #     torch.save(res, save_location+str(x)+'\label.pt')
+
+    for x in range(29,30):
+        left_right = False
+        stim, res = environment(255,51,150,1,1, right=left_right, slow_speed=slow_vel)
+        
+        os.mkdir(save_location+str(x))
+        torch.save(stim, save_location+str(x)+'\stimulus.pt')
+        torch.save(res, save_location+str(x)+'\label.pt')
+
+
+def Testsets1x():
+    for x in range(0,51):
+        speed = x*0.05 + 0.50
+        createSet_definedDist_direction('1x_'+str(x)+'_dist', speed)
+        print(speed)
+    return None
+
+
+def TestsetVelocityDist():
+    for x in range(0,34):
+        speed = 0.50 + x*.03
+        createDataTest('2x_'+str(x)+'_dist', 2, 0, 100, slow_speed=speed)
+        print(speed)
+    return None
+
+
 def plotStimulus(testSet, name):
     '''
     testSet = 'binary_75_3_testset'
@@ -299,19 +352,18 @@ def plotStimulus(testSet, name):
     camera = Camera(fig)
     test = testSet.cpu().detach().numpy()[0,0,:,:,:]
     for i in range(test.shape[0]):
-        plt.imshow(test[i,:,:], cmap='hot', vmin=-2.0, vmax=2.0)
+        plt.imshow(test[i,:,:], cmap='hot', vmin=0.0, vmax=1.0)
         camera.snap()
     animation = camera.animate()
-    animation.save('Q:/Documents/TDS SuperUROP/'+name+'.gif', writer = 'pillow', fps=15)
+    animation.save('Q:/Documents/Github/'+name+'.gif', writer = 'pillow', fps=15)
     return
 
 
 if __name__ == "__main__":
-    createDataTest('2x_speed',2,1000,100)
-    # plotStimulus(torch.load('Q:/Documents/TDS SuperUROP/dataset_2_5x_speed/0/stimulus.pt'))
-    
-    
-    
+    # createDataTest('2x_speed',2,1000,100)
+    plotStimulus(torch.load('Q:/Documents/Github/retina_model_datasets/1x_40_dist/0/stimulus.pt'), '1_direction')
+    # Testsets1x()
+    print('Done')
     
     
     

@@ -190,11 +190,11 @@ class Dataset(torch.utils.data.Dataset):
         'Generates one sample of data'
         # Select sample
         ID = self.list_IDs[index]
-        dirr = 'Q:\Documents\TDS SuperUROP\\'+self.file_name + os.sep + str(ID)
+        dirr = 'Q:/Documents/Github'+os.sep+self.file_name + os.sep + str(ID)
 
         # Load data and get label
-        X = torch.load(dirr+'\stimulus.pt')
-        y = torch.load(dirr+'\label.pt')
+        X = torch.load(dirr+os.sep+'stimulus.pt')
+        y = torch.load(dirr+os.sep+'label.pt')
         return X, y
 
 
@@ -310,7 +310,7 @@ def CompareTensors_LeftRight(outputs, labels):
     compare = torch.eq(out, label)
     left = torch.logical_not(torch.logical_or(out, label))
     right = torch.logical_and(out, label)
-    return torch.sum(compare), torch.sum(left), torch.sum(right)
+    return torch.sum(compare), torch.sum(left), torch.sum(right), torch.sum(right)/torch.sum(label)
 
 
 def tens_np(tens):
@@ -330,16 +330,19 @@ def TestModel_LeftRight(net, data, label):
     running_loss = 0
     running_left = 0
     running_right = 0
+    right_a = []
     for i, data in enumerate(testloader, 0):
         inputs, labels = reConfigure(data)
         label_store = label_store + torch.sum(labels, 0)
         outputs = net(inputs)
-        temp_loss, temp_left, temp_right = CompareTensors_LeftRight(outputs, labels)
+        temp_loss, temp_left, temp_right, right_acc = CompareTensors_LeftRight(outputs, labels)
+        right_a.append(right_acc)
         running_loss += temp_loss
         running_left += temp_left
         running_right += temp_right
     
-    return tens_np(running_loss/label), tens_np(running_left/running_loss), tens_np(running_right/running_loss)
+    accuracy_right = tens_np(sum(right_a)/len(right_a))
+    return tens_np(running_loss/label), tens_np(running_left/running_loss), tens_np(running_right/running_loss), accuracy_right
 
 
 if __name__ == "__main__":

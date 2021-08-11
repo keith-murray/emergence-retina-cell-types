@@ -582,14 +582,6 @@ def ExamineAmacrineResponsesinTruncated(types, cell, testset):
     plt.show()
 
 
-def TestsetVelocityDist():
-    for x in range(0,34):
-        speed = 0.50 + x*.03
-        createDataTest('2x_'+str(x)+'_dist', 2, 0, 100, slow_speed=speed)
-        print(speed)
-    return None
-
-
 def BipolarAmacrineSubstitute():
     model_results = {}
     bipolar = [1,2,4,6,7]
@@ -662,6 +654,120 @@ def TruncatedModelSlowCurve(types, model, sace):
     ax.set_ylabel('Model Accuracy')
     plt.savefig(sace+'.svg')
     plt.show()
+    return None
+
+
+def BipolarSubstitute():
+    model_results = {}
+    # bipolar = [1,2,4,6,7]
+    for b in range(8):
+        left_accuracy = []
+        right_accuracy = []
+        only_right_accuracy = []
+        net = AnalysisModel(2, 0.00).to(device)
+        save_loc = 'Q:\Documents\TDS SuperUROP\\model\\model_bipolar_'+str(b)+'.pt'
+        weights = torch.load(save_loc)
+        net.load_state_dict(weights)
+        net.eval()
+        
+        for i in range(0,51):
+            testset = '1x_'+str(i)+'_dist'
+            base_res, left, right, only_right = TestModel_LeftRight(net, testset, 30)
+            left = base_res*left
+            right = base_res*right
+            left_accuracy.append(left.item())
+            right_accuracy.append(right.item())
+            only_right_accuracy.append(only_right.item())
+            
+        model_results[str(b)] = [left_accuracy, right_accuracy, only_right_accuracy]
+    
+    fig, ax = plt.subplots()
+    for y in range(8):
+        ax.plot([x*0.05+0.5 for x in range(0,51)], model_results[str(y)][2], label=str(y))
+    # ax.stackplot(velocity_labels, current_results.values(),
+    #              labels=current_results.keys())
+    ax.legend(loc='upper left')
+    ax.set_title('Slow Velocity Curve for Bipolar '+str(b))
+    ax.set_xlabel('Fast Velocity')
+    ax.set_ylabel('Model Accuracy')
+    plt.savefig('Q:/Documents/TDS SuperUROP\\model\\combination_graphs\\graph_fast_bipolar_'+str(b)+'.svg')
+    plt.show()
+
+    # json_dump = json.dumps(model_results)
+    # f = open("Q:/Documents/TDS SuperUROP\\model\\bipolar_empha.json","w")
+    # f.write(json_dump)
+    # f.close()
+    return model_results[str(y)][2]
+
+
+def ControlledDirection(net, sace):
+    left_accuracy = []
+    right_accuracy = []
+    net.eval()
+    
+    for i in range(0,51):
+        testset = '1x_'+str(i)+'_dist'
+        base_res, left, right = TestModel_LeftRight(net, testset, 28)
+        left = base_res*left
+        right = base_res*right
+        left_accuracy.append(left.item())
+        right_accuracy.append(right.item())
+        
+    current_results = {'Left Accuracy': left_accuracy, 'Right Accuracy': right_accuracy}
+    velocity_labels = [x*0.05 + 0.50 for x in range(0,51)]
+    
+    fig, ax = plt.subplots()
+    ax.stackplot(velocity_labels, current_results.values(),
+                 labels=current_results.keys())
+    plt.savefig(sace+'.svg')
+    plt.show()
+    return np.array(left_accuracy) + np.array(right_accuracy)
+
+
+def BipolarPrune(types, model):
+    net = AnalysisModel(types, 0.00).to(device)
+    save_loc = 'Q:\Documents\TDS SuperUROP\\'+model+'.pt'
+    weights = torch.load(save_loc)
+    net.load_state_dict(weights)
+    net.eval()
+    
+    results = np.zeros((8,51))
+    basket1 = ['0','1','2','3','4','5','6','7']
+    basket2 = ['0','1','2','3','4','5','6','7']
+    basket3 = ['0','1','2','3','4','5','6','7']
+    
+    for i in range(len(basket1)):
+        basket1[i] = 'bipolar' + basket1[i]
+        basket2[i] = 'amacrine' + basket2[i]
+        basket3[i] = 'ganglion' + basket3[i]
+    
+    for a in basket1:
+        exclude = set(basket1) - set([a,])
+        for i in exclude:
+            print(i)
+            if 'bipolar' in i:
+                exec("""
+net.{0}.bipolar_temporal.weight.data = torch.zeros(1, 1, 31, 1, 1).to(device)
+net.{0}.bipolar_temporal.bias.data = torch.zeros(1).to(device)
+                """.format(i))                    
+            elif 'amacrine' in i:
+                exec("""
+net.{0}.amacrine_temporal.weight.data = torch.zeros(1, 1, 31, 1, 1).to(device)
+net.{0}.amacrine_temporal.bias.data = torch.zeros(1).to(device)
+                """.format(i))
+            elif 'ganglion' in i:
+                exec("""
+net.{0}.ganglion_temporal.weight.data = torch.zeros(1, 1, 31, 1, 1).to(device)
+net.{0}.ganglion_temporal.bias.data = torch.zeros(1).to(device)
+                """.format(i))
+                
+        results[int(a[-1]),:] = ControlledDirection(net, 'bipolar_full_model_'+a[-1])
+        net.load_state_dict(weights)
+        net.eval()
+    
+    plt.plot([x*0.05 + 0.50 for x in range(0,51)],results.T)
+    plt.savefig('overlap_bipolar_accuracy.svg')
+    
     return None
 
 
@@ -752,15 +858,15 @@ if __name__ == "__main__":
     # TruncatedModelSlowCurve(8, 'model\\model', 'full_model_stack')
     # TruncatedModelSlowCurve(2, 'model\\model_top_dist', 'ablated_model_stack')
     # [resultsB, resultsA, resultsG, thresh] = FindRelevantTypes(8, 'model\\model', 'testset_2x_speed', 0.95)
-    ResponsesAcrossDifferentStages(8, 'model\\model')
+    # ResponsesAcrossDifferentStages(8, 'model\\model')
     
     # TruncatedModelSlowCurve(2, 'model\\model_top_dist_san_bipolar', 'ablated_model_stack_san_bipolar')
     # TruncatedModelSlowCurve(2, 'model\\model_top_dist_san_ama', 'ablated_model_stack_san_ama')
     # TruncatedModelSlowCurve(2, 'model\\model_top_dist_ganglion0', 'ablated_model_stack_ganglion0')
     # TruncatedModelSlowCurve(2, 'model\\model_top_dist_ganglion1', 'ablated_model_stack_ganglion1')
     
-    DifferentStages(2,'model\\model_top_dist',None,None,stim=torch.load('Q:/Documents/TDS SuperUROP/model/top dist/left ganglion/left_cell_stim.pt'), left=True)
-    DifferentStages(2,'model\\model_top_dist',None,None,stim=torch.load('Q:/Documents/TDS SuperUROP/model/top dist/right ganglion/right_cell_stim.pt'), left=False)
+    # DifferentStages(2,'model\\model_top_dist',None,None,stim=torch.load('Q:/Documents/TDS SuperUROP/model/top dist/left ganglion/left_cell_stim.pt'), left=True)
+    # DifferentStages(2,'model\\model_top_dist',None,None,stim=torch.load('Q:/Documents/TDS SuperUROP/model/top dist/right ganglion/right_cell_stim.pt'), left=False)
     
     # save_loc = 'Q:\Documents\TDS SuperUROP\\model\\model_top_dist.pt'
     # weights = torch.load(save_loc)
@@ -799,6 +905,9 @@ if __name__ == "__main__":
     # plt.imshow(right_gang[0,0,50,120:220,130:230], cmap='hot', vmin=-2.0, vmax=2.0)
     # plt.savefig('right_deep_3.svg')
     
+    # BipolarSubstitute()
+    # BipolarPrune(8, 'model\\model')
+    # res = BipolarSubstitute()
     print('Fin.')
     
     
