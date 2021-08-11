@@ -20,7 +20,7 @@ class Bipolar(nn.Module):
         self.bipolar_space = nn.Conv3d(1,1,(1,10,10), stride=(1, 5, 5), padding=(0, 0, 0), bias=True, groups=1)
         self.bipolar_temporal = nn.Conv3d(1,1,(31,1,1), stride=(1, 1, 1), padding=(0, 0, 0), bias=True, groups=1)
         self.drop_layer = nn.Dropout(p=drop) # Initialization will specify dropout rate
-        self.p1d = (0, 0, 0, 0, 30, 0) # Manual pad to preference the begining ### TODO: Make 30
+        self.p1d = (0, 0, 0, 0, 30, 0)
 
     def forward(self, stimulus):
         spacial = self.drop_layer(self.bipolar_space(stimulus))
@@ -58,7 +58,7 @@ class Ganglion(nn.Module):
         spacial_amacrine = self.drop_layer(self.ganglion_amacrine_space(amacrine_out))
         spacial = spacial_bipolar + spacial_amacrine
         spacial_padded = F.pad(spacial, self.p1d)
-        temporal = self.drop_layer(self.ganglion_temporal(spacial_padded)) # Less opinions about positivity
+        temporal = self.drop_layer(self.ganglion_temporal(spacial_padded))
         return F.relu(temporal) # RELU to enforce positivity of output
 
 
@@ -70,7 +70,7 @@ class Decision(nn.Module):
 
     def forward(self, ganglion_out):
         spacial = self.drop_layer(self.decision_space(ganglion_out))
-        return spacial # No ReLU?
+        return spacial
 
 
 class RetinaModel(nn.Module):
@@ -224,11 +224,6 @@ class WeightReinforcer(object):
             w_g_temporal = module.ganglion_temporal.weight.data
             w_g_temporal = torch.clamp(w_g_temporal, min=self.bound)
             module.ganglion_temporal.weight.data = w_g_temporal
-        
-        # elif isinstance(module, Decision):
-        #     w_d_space = module.decision_space.weight.data
-        #     w_d_space = torch.clamp(w_d_space, min=self.bound)
-        #     module.decision_space.weight.data = w_d_space
 
 
 def reConfigure(data):
