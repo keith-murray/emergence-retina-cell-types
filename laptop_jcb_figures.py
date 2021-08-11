@@ -10,6 +10,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
+import json
 from celluloid import Camera
 from create_data import tens_np
 from retina_model import Bipolar, Amacrine, Ganglion, AnalysisModel, TestModel, TestModel_LeftRight
@@ -247,56 +248,30 @@ def figure5():
     plt.colorbar(im, cax=cax)
     f.tight_layout()
     plt.show()
+    
+    return None
 
 def BipolarSubstitute():
-    model_results = {}
-    for b in range(8):
-        left_accuracy = []
-        right_accuracy = []
-        only_right_accuracy = []
-        net = AnalysisModel(2, 0.00).to(device)
-        save_loc = 'Q:\Documents\TDS SuperUROP\\model\\model_bipolar_'+str(b)+'.pt'
-        weights = torch.load(save_loc)
-        net.load_state_dict(weights)
-        net.eval()
-        
-        for i in range(0,51):
-            testset = '1x_'+str(i)+'_dist'
-            base_res, left, right, only_right = TestModel_LeftRight(net, testset, 30)
-            left = base_res*left
-            right = base_res*right
-            left_accuracy.append(left.item())
-            right_accuracy.append(right.item())
-            only_right_accuracy.append(only_right.item())
-            
-        model_results[str(b)] = [left_accuracy, right_accuracy, only_right_accuracy]
+    f = open("models_and_data/bipolar_empha.json")
+    model_results = json.loads(f.read())
     
     fig, ax = plt.subplots()
     for y in range(8):
         ax.plot([x*0.05+0.5 for x in range(0,51)], model_results[str(y)][2], label=str(y))
-    # ax.stackplot(velocity_labels, current_results.values(),
-    #              labels=current_results.keys())
     ax.legend(loc='upper left')
-    ax.set_title('Slow Velocity Curve for Bipolar '+str(b))
-    ax.set_xlabel('Fast Velocity')
-    ax.set_ylabel('Model Accuracy')
-    plt.savefig('Q:/Documents/TDS SuperUROP\\model\\combination_graphs\\graph_fast_bipolar_'+str(b)+'.svg')
+    ax.set_xlabel(r'$f$ speed')
+    ax.set_ylabel('Probability of activation')
     plt.show()
-
-    # json_dump = json.dumps(model_results)
-    # f = open("Q:/Documents/TDS SuperUROP\\model\\bipolar_empha.json","w")
-    # f.write(json_dump)
-    # f.close()
-    return model_results[str(y)][2]
+    
+    return None
 
 if __name__ == "__main__":
     # PsycometricFunction()
     # ModelAblation()
-    # figure4()
+    figure4()
     # DeepDream()
     # DifferentStages()
     figure5()
-    
-    res = BipolarSubstitute()
+    BipolarSubstitute()
     
     
