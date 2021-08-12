@@ -636,7 +636,7 @@ def TruncatedModelSlowCurve(types, model, sace):
     
     for i in range(0,34):
         testset = 'testset_2x_'+str(i)+'_dist'
-        base_res, left, right = TestModel_LeftRight(net, testset, 100)
+        base_res, left, right,  = TestModel_LeftRight(net, testset, 100)
         left = base_res*left
         right = base_res*right
         left_accuracy.append(left.item())

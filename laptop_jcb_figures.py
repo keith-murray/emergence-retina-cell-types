@@ -15,7 +15,7 @@ from celluloid import Camera
 from create_data import tens_np
 from retina_model import Bipolar, Amacrine, Ganglion, AnalysisModel, TestModel, TestModel_LeftRight
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cpu')
 plt.rcParams["font.family"] = "arial"
 
 def PsycometricFunction():
@@ -203,7 +203,7 @@ def figure5():
     left = torch.load('models_and_data/left_cell_stim.pt',
                       map_location=torch.device('cpu')).cpu().detach().numpy()[0,0,:,139:211,139:211]
     
-    f, axs = plt.subplots(2, 4, figsize=(10, 5))
+    f, axs = plt.subplots(2, 4, figsize=(12, 6))
     
     im = axs[0,0].imshow(right[0], cmap='coolwarm', vmin=-1.0, vmax=1.0)
     axs[0,0].set_xticks([])
@@ -251,19 +251,174 @@ def figure5():
     
     return None
 
-def BipolarSubstitute():
+def BipolarActivations():
     f = open("models_and_data/bipolar_empha.json")
     model_results = json.loads(f.read())
+    f.close()
     
     fig, ax = plt.subplots()
     for y in range(8):
         ax.plot([x*0.05+0.5 for x in range(0,51)], model_results[str(y)][2], label=str(y))
     ax.legend(loc='upper left')
+    ax.set_title('B',loc='left')
     ax.set_xlabel(r'$f$ speed')
     ax.set_ylabel('Probability of activation')
+    
     plt.show()
     
     return None
+
+def ExampleStimulus():
+    stim = torch.load('models_and_data/stimulus.pt').cpu().detach().numpy()
+    
+    fig, ax = plt.subplots()
+    ax.imshow(stim[0,0,0,:,:], cmap='gray')
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_title('A',loc='left')
+    
+    plt.show()
+    
+    return None
+
+def figure6():
+    f = open("models_and_data/bipolar_empha.json")
+    model_results = json.loads(f.read())
+    f.close()
+    
+    stim = torch.load('models_and_data/stimulus.pt').cpu().detach().numpy()
+
+    f, (a0, a1) = plt.subplots(1, 2, figsize=(12, 4), gridspec_kw={'width_ratios': [1, 1]})
+    a0.imshow(stim[0,0,0,:,:], cmap='gray')
+    a0.set_xticks([])
+    a0.set_yticks([])
+    a0.set_title('A',loc='left')
+    
+    for y in range(8):
+        a1.plot([x*0.05+0.5 for x in range(0,51)], model_results[str(y)][2], label=str(y))
+    a1.legend(loc='upper left')
+    a1.set_title('B',loc='left')
+    a1.set_xlabel(r'$f$ speed')
+    a1.set_ylabel('Probability of activation')
+    
+    plt.show()
+    
+    return None
+
+def LeftAndRight():
+    data = torch.load('models_and_data/left_and_right_accuracies.pt', 
+                      map_location=torch.device('cpu'))
+    
+    x = np.arange(len(data['right']))
+    width = 0.35
+    labels = ['Full', 'Ablated', 'Bipolar Ablated', 'Amacrine Ablated']
+    
+    fig, ax = plt.subplots()
+    ax.bar(x - width/2, data['left'], width, label=r'Left $F$')
+    ax.bar(x + width/2, data['right'], width, label=r'Right $F$')
+    
+    ax.set_ylabel('Testset Accuracy')
+    ax.set_xlabel('Model')
+    ax.set_title('A', loc='left')
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.legend()
+    plt.show()
+    
+def SlowCurveAccuracy():
+    data = torch.load('models_and_data/ablated_amacrine_results.pt')
+    velocity_labels = [x*0.03 + 0.50 for x in range(0,34)]
+    
+    fig, ax = plt.subplots()
+    
+    ax.plot(velocity_labels, data['right'], label=r'Right $F$')
+    ax.plot(velocity_labels, data['left'], label=r'Left $F$')
+    ax.plot(velocity_labels, data['total'], label=r'Both $F$\'s')
+    
+    ax.set_title('B', loc='left')
+    ax.set_xlabel(r'$s$ speed')
+    ax.set_ylabel('Testset Accuracy')
+    ax.legend(loc=(0.05,0.1))
+    plt.show()
+        
+    return None
+
+def AmacrineDendrites():
+    model = torch.load('models_and_data/model.pt', map_location=torch.device('cpu'))
+    bipolar_index = [1,2,4,6,7]
+    l = len(bipolar_index)
+    data = torch.zeros((l*8,5,5))
+    count = 0
+    
+    for x in model:
+        if 'amacrine_space' in x and 'ganglion_amacrine' not in x and 'bias' not in x:
+            data[count*l:count*l+l] = model[x][0,bipolar_index,0,:,:] + model[x[:-6]+'bias']
+            count += 1
+    
+    data = nn.functional.relu(data).numpy()
+    mean = np.nanmean(data, axis=(0))
+    
+    fig, ax = plt.subplots()
+    
+    im = ax.imshow(mean, cmap='Reds')
+    plt.colorbar(im, ax=ax)
+    plt.show()
+    
+    return None
+    
+def figure7():
+    data1 = torch.load('models_and_data/left_and_right_accuracies.pt', 
+                      map_location=torch.device('cpu'))
+    
+    y = np.arange(len(data1['right']))
+    width = 0.35
+    labels = ['Full', 'Ablated', 'Bipolar', 'Amacrine']
+    
+    data2 = torch.load('models_and_data/ablated_amacrine_results.pt')
+    velocity_labels = [x*0.03 + 0.50 for x in range(0,34)]
+    
+    model = torch.load('models_and_data/model.pt', map_location=torch.device('cpu'))
+    bipolar_index = [1,2,4,6,7]
+    l = len(bipolar_index)
+    data3 = torch.zeros((l*8,5,5))
+    count = 0
+    
+    for x in model:
+        if 'amacrine_space' in x and 'ganglion_amacrine' not in x and 'bias' not in x:
+            data3[count*l:count*l+l] = model[x][0,bipolar_index,0,:,:] + model[x[:-6]+'bias']
+            count += 1
+    
+    data3 = nn.functional.relu(data3).numpy()
+    mean = np.nanmean(data3, axis=(0))
+    
+    f, (a0, a1, a2) = plt.subplots(1, 3, figsize=(14, 4), gridspec_kw={'width_ratios': [1, 1, 1]})
+    a0.bar(y - width/2, data1['left'], width, label=r'Left $F$')
+    a0.bar(y + width/2, data1['right'], width, label=r'Right $F$')
+    a0.set_ylabel('Testset Accuracy')
+    a0.set_xlabel('Model')
+    a0.set_title('A', loc='left')
+    a0.set_xticks(y)
+    a0.set_xticklabels(labels)
+    a0.legend()
+    
+    a1.plot(velocity_labels, data2['right'], label=r'Right $F$')
+    a1.plot(velocity_labels, data2['left'], label=r'Left $F$')
+    a1.plot(velocity_labels, data2['total'], label=r'Both')
+    a1.set_title('B', loc='left')
+    a1.set_xlabel(r'$s$ speed')
+    a1.set_ylabel('Testset Accuracy')
+    a1.legend(loc=(0.03,0.1))
+    
+    im = a2.imshow(mean, cmap='Reds')
+    plt.colorbar(im, ax=a2, ticks=[0.00,0.02], label='Weight strength')
+    a2.set_title('C', loc='left')
+    a2.set_xticks([])
+    a2.set_yticks([])
+    a2.set_xlabel('Horrizontal connections')
+    a2.set_ylabel('Vertical connections')
+    
+    # plt.tight_layout()
+    plt.show()
 
 if __name__ == "__main__":
     # PsycometricFunction()
@@ -272,6 +427,12 @@ if __name__ == "__main__":
     # DeepDream()
     # DifferentStages()
     figure5()
-    BipolarSubstitute()
-    
+    # BipolarActivations()
+    # ExampleStimulus()
+    figure6()
+    # LeftAndRight()
+    # SlowCurveAccuracy()
+    # AmacrineDendrites()
+    figure7()
+
     
