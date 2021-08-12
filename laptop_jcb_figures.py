@@ -17,6 +17,7 @@ from retina_model import Bipolar, Amacrine, Ganglion, AnalysisModel, TestModel, 
 
 device = torch.device('cpu')
 plt.rcParams["font.family"] = "arial"
+plt.rcParams['font.size'] = 16
 
 def PsycometricFunction():
     model = np.load('../retina_model_models/psycho_alpha_full.npy')[10:]
@@ -61,7 +62,7 @@ def ModelAblation():
     
     return None
 
-def figure4():
+def figure3():
     model = np.load('models_and_data/psycho_alpha_full.npy')[10:]
     ablated = np.load('models_and_data/psycho_alpha_ablated.npy')[10:]
     
@@ -93,6 +94,7 @@ def figure4():
     a1.set_title('B', loc='left')
     f.tight_layout()
     
+    plt.savefig('jcb figs/figure 3.svg', format="svg")
     plt.show()
 
     return None
@@ -184,7 +186,7 @@ def DifferentStages():
 
     return None
 
-def figure5():
+def figure4():
     right = torch.load('models_and_data/right_cell_stim.pt',
                        map_location=torch.device('cpu'))
     left = torch.load('models_and_data/left_cell_stim.pt',
@@ -203,7 +205,7 @@ def figure5():
     left = torch.load('models_and_data/left_cell_stim.pt',
                       map_location=torch.device('cpu')).cpu().detach().numpy()[0,0,:,139:211,139:211]
     
-    f, axs = plt.subplots(2, 4, figsize=(12, 6))
+    f, axs = plt.subplots(2, 4, figsize=(18, 7.5))
     
     im = axs[0,0].imshow(right[0], cmap='coolwarm', vmin=-1.0, vmax=1.0)
     axs[0,0].set_xticks([])
@@ -244,9 +246,11 @@ def figure5():
     axs[1,3].set_xlabel('Time Step')
     axs[1,3].set_ylabel('Activity magnitude')
 
-    cax = plt.axes([1, 0.125, 0.0225, 0.75])
-    plt.colorbar(im, cax=cax)
+    plt.colorbar(im, ax=axs[0,2])
+    plt.colorbar(im, ax=axs[1,2])
     f.tight_layout()
+    
+    plt.savefig('jcb figs/figure 4.svg', format="svg")
     plt.show()
     
     return None
@@ -281,14 +285,14 @@ def ExampleStimulus():
     
     return None
 
-def figure6():
+def figure5():
     f = open("models_and_data/bipolar_empha.json")
     model_results = json.loads(f.read())
     f.close()
     
     stim = torch.load('models_and_data/stimulus.pt').cpu().detach().numpy()
 
-    f, (a0, a1) = plt.subplots(1, 2, figsize=(12, 4), gridspec_kw={'width_ratios': [1, 1]})
+    f, (a0, a1) = plt.subplots(1, 2, figsize=(15, 5), gridspec_kw={'width_ratios': [1, 1]})
     a0.imshow(stim[0,0,0,:,:], cmap='gray')
     a0.set_xticks([])
     a0.set_yticks([])
@@ -301,6 +305,7 @@ def figure6():
     a1.set_xlabel(r'$f$ speed')
     a1.set_ylabel('Probability of activation')
     
+    plt.savefig('jcb figs/figure 5.svg', format="svg")
     plt.show()
     
     return None
@@ -366,7 +371,7 @@ def AmacrineDendrites():
     
     return None
     
-def figure7():
+def figure6():
     data1 = torch.load('models_and_data/left_and_right_accuracies.pt', 
                       map_location=torch.device('cpu'))
     
@@ -391,7 +396,7 @@ def figure7():
     data3 = nn.functional.relu(data3).numpy()
     mean = np.nanmean(data3, axis=(0))
     
-    f, (a0, a1, a2) = plt.subplots(1, 3, figsize=(14, 4), gridspec_kw={'width_ratios': [1, 1, 1]})
+    f, (a0, a1, a2) = plt.subplots(1, 3, figsize=(20, 4), gridspec_kw={'width_ratios': [1, 1, 1]})
     a0.bar(y - width/2, data1['left'], width, label=r'Left $F$')
     a0.bar(y + width/2, data1['right'], width, label=r'Right $F$')
     a0.set_ylabel('Testset Accuracy')
@@ -417,22 +422,13 @@ def figure7():
     a2.set_xlabel('Horrizontal connections')
     a2.set_ylabel('Vertical connections')
     
-    # plt.tight_layout()
+    plt.savefig('jcb figs/figure 6.svg', format="svg")
     plt.show()
 
 if __name__ == "__main__":
-    # PsycometricFunction()
-    # ModelAblation()
-    figure4()
-    # DeepDream()
-    # DifferentStages()
-    figure5()
-    # BipolarActivations()
-    # ExampleStimulus()
+    # figure3()
+    # figure4()
+    # figure5()
     figure6()
-    # LeftAndRight()
-    # SlowCurveAccuracy()
-    # AmacrineDendrites()
-    figure7()
 
     
