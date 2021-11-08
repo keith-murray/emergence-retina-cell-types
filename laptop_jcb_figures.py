@@ -32,7 +32,7 @@ def PsycometricFunction():
     ax.set_xlabel(r'Speed Ratio ($\alpha$)')
     ax.legend()
     
-    plt.savefig('psychometric_fig.svg')
+    plt.savefig('figures/psychometric_fig.svg')
     plt.show()
     
     return None
@@ -57,7 +57,7 @@ def ModelAblation():
     ax.set_xticklabels(['Bipolar','Amacrine','Ganglion'])
     # ax.legend()
     
-    plt.savefig('cell_type_ablation_fig.svg')
+    plt.savefig('figures/cell_type_ablation_fig.svg')
     plt.show()
     
     return None
@@ -94,7 +94,7 @@ def figure3():
     a1.set_title('B', loc='left')
     f.tight_layout()
     
-    plt.savefig('jcb figs/figure 3.svg', format="svg")
+    plt.savefig('figures/jcb figs/figure 3.svg', format="svg")
     plt.show()
 
     return None
@@ -250,7 +250,7 @@ def figure4():
     plt.colorbar(im, ax=axs[1,2])
     f.tight_layout()
     
-    plt.savefig('jcb figs/figure 4.svg', format="svg")
+    plt.savefig('figures/jcb figs/figure 4.svg', format="svg")
     plt.show()
     
     return None
@@ -305,7 +305,7 @@ def figure5():
     a1.set_xlabel(r'$f$ speed')
     a1.set_ylabel('Probability of activation')
     
-    plt.savefig('jcb figs/figure 5.svg', format="svg")
+    plt.savefig('figures/jcb figs/figure 5.svg', format="svg")
     plt.show()
     
     return None
@@ -422,13 +422,13 @@ def figure6():
     a2.set_xlabel('Horrizontal connections')
     a2.set_ylabel('Vertical connections')
     
-    plt.savefig('jcb figs/figure 6.svg', format="svg")
+    plt.savefig('figures/jcb figs/figure 6.svg', format="svg")
     plt.show()
 
 if __name__ == "__main__":
-    # figure3()
-    # figure4()
-    # figure5()
+    figure3()
+    figure4()
+    figure5()
     figure6()
 
     

@@ -12,7 +12,7 @@ device = torch.device("cuda:0")
 
 def TransplantModel():
     net = AnalysisModel(2, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\model\\model.pt'
+    save_loc = 'models_and_data/model.pt'
     weights = torch.load(save_loc)
     
     net.bipolar0.bipolar_space.weight.data = weights['bipolar4.bipolar_space.weight']
@@ -63,12 +63,12 @@ def TransplantModel():
     net.decisionRight.decision_space.weight.data = torch.cat((x[:,0:1,:,:,:], x[:,2:3,:,:,:]), dim=1)
     net.decisionRight.decision_space.bias.data = weights['decisionRight.decision_space.bias']
 
-    torch.save(net.state_dict(), 'Q:\Documents\TDS SuperUROP\\model\\model_2_types.pt')
+    torch.save(net.state_dict(), 'models_and_data/model_2_types.pt')
 
 
 def TransplantModel_TopDist():
     net = AnalysisModel(2, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\model\\model.pt'
+    save_loc = 'models_and_data/model.pt'
     weights = torch.load(save_loc)
     
     net.bipolar0.bipolar_space.weight.data = weights['bipolar4.bipolar_space.weight']
@@ -125,12 +125,12 @@ def TransplantModel_TopDist():
     net.decisionRight.decision_space.weight.data = torch.cat((x[:,0:1,:,:,:], x[:,2:3,:,:,:]), dim=1)
     net.decisionRight.decision_space.bias.data = weights['decisionRight.decision_space.bias']
 
-    torch.save(net.state_dict(), 'Q:\Documents\TDS SuperUROP\\model\\model_top_dist.pt')
+    torch.save(net.state_dict(), 'models_and_data/model_top_dist.pt')
 
 
 def TransplantModel_TopDist_san_bipolar():
     net = AnalysisModel(2, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\model\\model.pt'
+    save_loc = 'models_and_data/model.pt'
     weights = torch.load(save_loc)
     
     net.bipolar0.bipolar_space.weight.data = torch.zeros(weights['bipolar4.bipolar_space.weight'].shape)
@@ -187,12 +187,12 @@ def TransplantModel_TopDist_san_bipolar():
     net.decisionRight.decision_space.weight.data = torch.cat((x[:,0:1,:,:,:], x[:,2:3,:,:,:]), dim=1)
     net.decisionRight.decision_space.bias.data = weights['decisionRight.decision_space.bias']
 
-    torch.save(net.state_dict(), 'Q:\Documents\TDS SuperUROP\\model\\model_top_dist_san_bipolar.pt')
+    torch.save(net.state_dict(), 'models_and_data/model_top_dist_san_bipolar.pt')
 
 
 def TransplantModel_TopDist_SanAma():
     net = AnalysisModel(2, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\model\\model.pt'
+    save_loc = 'models_and_data/model.pt'
     weights = torch.load(save_loc)
     
     net.bipolar0.bipolar_space.weight.data = weights['bipolar4.bipolar_space.weight']
@@ -249,12 +249,12 @@ def TransplantModel_TopDist_SanAma():
     net.decisionRight.decision_space.weight.data = torch.cat((x[:,0:1,:,:,:], x[:,2:3,:,:,:]), dim=1)
     net.decisionRight.decision_space.bias.data = weights['decisionRight.decision_space.bias']
 
-    torch.save(net.state_dict(), 'Q:\Documents\TDS SuperUROP\\model\\model_top_dist_san_ama.pt')
+    torch.save(net.state_dict(), 'models_and_data/model_top_dist_san_ama.pt')
 
 
 def TransplantModel_TopDist_san_ganglion0():
     net = AnalysisModel(2, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\model\\model.pt'
+    save_loc = 'models_and_data/model.pt'
     weights = torch.load(save_loc)
     
     net.bipolar0.bipolar_space.weight.data = weights['bipolar4.bipolar_space.weight']
@@ -311,12 +311,12 @@ def TransplantModel_TopDist_san_ganglion0():
     net.decisionRight.decision_space.weight.data = torch.cat((x[:,0:1,:,:,:], x[:,2:3,:,:,:]), dim=1)
     net.decisionRight.decision_space.bias.data = weights['decisionRight.decision_space.bias']
 
-    torch.save(net.state_dict(), 'Q:\Documents\TDS SuperUROP\\model\\model_top_dist_ganglion0.pt')
+    torch.save(net.state_dict(), 'models_and_data/model_top_dist_ganglion0.pt')
 
 
 def TransplantModel_TopDist_san_ganglion1():
     net = AnalysisModel(2, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\model\\model.pt'
+    save_loc = 'models_and_data/model.pt'
     weights = torch.load(save_loc)
     
     net.bipolar0.bipolar_space.weight.data = weights['bipolar4.bipolar_space.weight']
@@ -373,12 +373,12 @@ def TransplantModel_TopDist_san_ganglion1():
     net.decisionRight.decision_space.weight.data = torch.cat((x[:,0:1,:,:,:], x[:,2:3,:,:,:]), dim=1)
     net.decisionRight.decision_space.bias.data = weights['decisionRight.decision_space.bias']
 
-    torch.save(net.state_dict(), 'Q:\Documents\TDS SuperUROP\\model\\model_top_dist_ganglion1.pt')
+    torch.save(net.state_dict(), 'models_and_data/model_top_dist_ganglion1.pt')
 
 
 def TransplantAmacrine_TopDist(amacrine_number):
     net = AnalysisModel(2, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\model\\model.pt'
+    save_loc = 'models_and_data/model.pt'
     weights = torch.load(save_loc)
     
     net.bipolar0.bipolar_space.weight.data = weights['bipolar4.bipolar_space.weight']
@@ -437,12 +437,12 @@ net.amacrine0.amacrine_temporal.bias.data = weights['amacrine{0}.amacrine_tempor
     net.decisionRight.decision_space.weight.data = torch.cat((x[:,0:1,:,:,:], x[:,2:3,:,:,:]), dim=1)
     net.decisionRight.decision_space.bias.data = weights['decisionRight.decision_space.bias']
 
-    torch.save(net.state_dict(), 'Q:\Documents\TDS SuperUROP\\model\\model_top_dist_'+str(amacrine_number)+'.pt')
+    torch.save(net.state_dict(), 'models_and_data/model_top_dist_'+str(amacrine_number)+'.pt')
 
 
 def TransplantBipolar_TopDist(bipolar_number):
     net = AnalysisModel(2, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\model\\model.pt'
+    save_loc = 'models_and_data/model.pt'
     weights = torch.load(save_loc)
     
     exec('''
@@ -501,12 +501,12 @@ net.bipolar0.bipolar_temporal.bias.data = weights['bipolar{0}.bipolar_temporal.b
     net.decisionRight.decision_space.weight.data = torch.cat((x[:,0:1,:,:,:], x[:,2:3,:,:,:]), dim=1)
     net.decisionRight.decision_space.bias.data = weights['decisionRight.decision_space.bias']
 
-    torch.save(net.state_dict(), 'Q:\Documents\TDS SuperUROP\\model\\model_top_dist_'+str(bipolar_number)+'.pt')
+    torch.save(net.state_dict(), 'models_and_data/model_top_dist_'+str(bipolar_number)+'.pt')
 
 
 def TransplantBiAm(bipolar_number, amacrine_number):
     net = AnalysisModel(2, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\model\\model.pt'
+    save_loc = 'models_and_data/model.pt'
     weights = torch.load(save_loc)
     
     exec('''
@@ -567,12 +567,12 @@ net.amacrine0.amacrine_temporal.bias.data = weights['amacrine{0}.amacrine_tempor
     net.decisionRight.decision_space.weight.data = torch.cat((x[:,0:1,:,:,:], x[:,2:3,:,:,:]), dim=1)
     net.decisionRight.decision_space.bias.data = weights['decisionRight.decision_space.bias']
 
-    torch.save(net.state_dict(), 'Q:\Documents\TDS SuperUROP\\model\\model_'+str(bipolar_number)+'_'+str(amacrine_number)+'.pt')
+    torch.save(net.state_dict(), 'models_and_data/model_'+str(bipolar_number)+'_'+str(amacrine_number)+'.pt')
 
 
 def TransplantBipolar_san_ama_gang1(bipolar_number):
     net = AnalysisModel(2, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\model\\model.pt'
+    save_loc = 'models_and_data/model.pt'
     weights = torch.load(save_loc)
     
     exec('''
@@ -631,24 +631,9 @@ net.bipolar0.bipolar_temporal.bias.data = weights['bipolar{0}.bipolar_temporal.b
     net.decisionRight.decision_space.weight.data = torch.cat((x[:,0:1,:,:,:], x[:,2:3,:,:,:]), dim=1)
     net.decisionRight.decision_space.bias.data = weights['decisionRight.decision_space.bias']
     
-    torch.save(net.state_dict(), 'Q:\Documents\TDS SuperUROP\\model\\model_bipolar_'+str(bipolar_number)+'.pt')
+    torch.save(net.state_dict(), 'models_and_data/model_bipolar_'+str(bipolar_number)+'.pt')
 
 
 if __name__ == "__main__":
-    # for i in range(8):
-        # TransplantBipolar_TopDist(i)
-    #     TransplantAmacrine_TopDist(i)
-    # bipolar = [1,2,4,6,7]
-    # amacrine = [0,2,3,6,7]
-    # for b in bipolar:
-    #     for a in amacrine:
-    #         TransplantBiAm(b, a)
-    # TransplantModel_TopDist_san_bipolar()
-    # TransplantModel_TopDist_SanAma()
-    # TransplantModel_TopDist_san_ganglion0()
-    # TransplantModel_TopDist_san_ganglion1()
-    for i in range(8):
-        TransplantBipolar_san_ama_gang1(i)
-    
-    print('Milhouse is not a meme.')
+    print('Pass')
     

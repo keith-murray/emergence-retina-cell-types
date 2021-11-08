@@ -220,7 +220,6 @@ def createSet(save_location,itera,dotDiscrim,speedDiscrim,slow_vel=None):
     None.
     '''
     os.mkdir(save_location)
-    save_location = save_location + os.sep
     left_right_ind = np.random.randint(0, high=2, size=itera, dtype=int)
     for x in range(itera):
         if left_right_ind[x] == 1:
@@ -251,7 +250,6 @@ def createSet_definedDist(save_location,itera,speedDiscrim,slow_vel):
     -------
     None.
     '''
-    save_location = 'Q:/Documents/TDS SuperUROP' + os.sep + save_location
     os.mkdir(save_location)
     save_location = save_location + os.sep
     left_right_ind = np.random.randint(0, high=2, size=itera, dtype=int)
@@ -284,11 +282,10 @@ def createDataTest(fileName,speedDiscrim,dataNum,testNum,slow_speed=None):
     None.
 
     '''
-    save_location = 'Q:/Documents/TDS SuperUROP' + os.sep
     if dataNum > 0:
-        createSet(save_location+'dataset_'+fileName,dataNum,0.5,speedDiscrim,slow_vel=slow_speed)
+        createSet('dataset_'+fileName,dataNum,0.5,speedDiscrim,slow_vel=slow_speed)
     if testNum > 0:
-        createSet(save_location+'testset_'+fileName,testNum,0.5,speedDiscrim,slow_vel=slow_speed)
+        createSet('testset_'+fileName,testNum,0.5,speedDiscrim,slow_vel=slow_speed)
 
 
 def createSet_definedDist_direction(save_location,slow_vel):
@@ -308,8 +305,7 @@ def createSet_definedDist_direction(save_location,slow_vel):
     -------
     None.
     '''
-    save_location = 'Q:/Documents/TDS SuperUROP' + os.sep + save_location
-    # os.mkdir(save_location)
+    os.mkdir(save_location)
     save_location = save_location + os.sep
     # for x in range(15):
     #     left_right = True
@@ -355,14 +351,12 @@ def plotStimulus(testSet, name):
         plt.imshow(test[i,:,:], cmap='hot', vmin=0.0, vmax=1.0)
         camera.snap()
     animation = camera.animate()
-    animation.save('Q:/Documents/Github/'+name+'.gif', writer = 'pillow', fps=15)
+    animation.save(name+'.gif', writer = 'pillow', fps=15)
     return
 
 
 if __name__ == "__main__":
-    # createDataTest('2x_speed',2,1000,100)
-    plotStimulus(torch.load('Q:/Documents/Github/retina_model_datasets/1x_40_dist/0/stimulus.pt'), '1_direction')
-    # Testsets1x()
+    createDataTest('2x_speed',2,1000,100)
     print('Done')
     
     

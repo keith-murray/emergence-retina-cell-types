@@ -190,7 +190,7 @@ class Dataset(torch.utils.data.Dataset):
         'Generates one sample of data'
         # Select sample
         ID = self.list_IDs[index]
-        dirr = 'Q:/Documents/Github'+os.sep+self.file_name + os.sep + str(ID)
+        dirr = self.file_name + os.sep + str(ID)
 
         # Load data and get label
         X = torch.load(dirr+os.sep+'stimulus.pt')
@@ -347,7 +347,7 @@ def TestModel_LeftRight(net, data, label):
 if __name__ == "__main__":
     net = RetinaModel(8, 0.40).to(device)
     loss = OptimizeModel(net, '2x_speed', 1000, 1000, 1)
-    torch.save(net.state_dict(), 'Q:\Documents\TDS SuperUROP\\model_graph.pt')
+    torch.save(net.state_dict(), 'models_and_data/model.pt')
     plt.plot(loss)
     
     

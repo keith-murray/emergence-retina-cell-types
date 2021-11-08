@@ -22,8 +22,7 @@ device = torch.device("cuda:0")
 
 def PsychometricCurveAnalysis(types,model,create=False):
     net = AnalysisModel(types, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\'+model+'.pt'
-    weights = torch.load(save_loc)
+    weights = torch.load(model)
     net.load_state_dict(weights)
     net.eval()
     
@@ -53,8 +52,7 @@ def PsychometricCurveAnalysis(types,model,create=False):
 def FindRelevantTypes(types, model, testset, threshold, exist=None):
     if exist is None:
         net = AnalysisModel(types, 0.00).to(device)
-        save_loc = 'Q:\Documents\TDS SuperUROP\\'+model+'.pt'
-        weights = torch.load(save_loc)
+        weights = torch.load(model)
         net.load_state_dict(weights)
     else:
         net = exist
@@ -115,7 +113,7 @@ def FindRelevantTypes(types, model, testset, threshold, exist=None):
     ax.set_xlabel('Accuracy')
     ax.set_title('Leissioning Cell Types to Affect Accuracy')
     plt.show()
-    ax.savefig('lesion_full_model.svg')
+    ax.savefig('figures/lesion_full_model.svg')
     
     if exist is not None:
         net.load_state_dict(state)
@@ -130,8 +128,7 @@ def scramble(net):
 
 def PruneNonImportantCells(types, model, testset, threshold, graph=True):
     net = AnalysisModel(types, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\'+model+'.pt'
-    weights = torch.load(save_loc)
+    weights = torch.load(model)
     net.load_state_dict(weights)
     net.eval()
     
@@ -190,8 +187,7 @@ def PruneNonImportantCells(types, model, testset, threshold, graph=True):
 
 def PrinciplePrune(types, model, testset):
     net = AnalysisModel(types, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\'+model+'.pt'
-    weights = torch.load(save_loc)
+    weights = torch.load(model)
     net.load_state_dict(weights)
     net.eval()
     
@@ -264,7 +260,7 @@ def CreateLeisionGraph():
     for x in range(75,101):
         temp_results = []
         for i in range(4):
-            (net, cells_kept) = PruneNonImportantCells(8, 'model\\model', 'testset_2x_speed', x/100, graph=False)
+            (net, cells_kept) = PruneNonImportantCells(8, 'models_and_data/model', 'testset_2x_speed', x/100, graph=False)
             temp_results.append(cells_kept)
         leision_results.append(sum(temp_results)/len(temp_results))
         
@@ -292,8 +288,7 @@ class DreamMap(nn.Module):
 def TrainDeepDream(types, model, dream, epochs, iterations):
     # Create Model
     net = AnalysisModel(types, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\'+model+'.pt'
-    weights = torch.load(save_loc)
+    weights = torch.load(model)
     net.load_state_dict(weights)
     net.eval()
     
@@ -320,13 +315,12 @@ def TrainDeepDream(types, model, dream, epochs, iterations):
 
 def DifferentStages(types, model, testset, num, stim=None, left=True):
     net = AnalysisModel(types, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\'+model+'.pt'
-    weights = torch.load(save_loc)
+    weights = torch.load(model)
     net.load_state_dict(weights)
     net.eval()
     
     if stim is None:
-        stimulus = torch.load('Q:/Documents/TDS SuperUROP/'+ testset +'/'+num+'/stimulus.pt').to(device)
+        stimulus = torch.load(testset +'/'+num+'/stimulus.pt').to(device)
     else:
         stimulus = stim
     
@@ -350,17 +344,16 @@ def DifferentStages(types, model, testset, num, stim=None, left=True):
     plt.title('Right and Left Cell Responses')
     plt.legend()
     if left:
-        plt.savefig('left_stim_res.svg')
+        plt.savefig('figures/left_stim_res.svg')
     else:
-        plt.savefig('right_stim_res.svg')
+        plt.savefig('figures/right_stim_res.svg')
     plt.show()
 
 
 def TestFlaws(types, model, data, label, printTF=False):
     # Model
     net = AnalysisModel(types, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\'+model+'.pt'
-    weights = torch.load(save_loc)
+    weights = torch.load(model)
     net.load_state_dict(weights)
     net.eval()
     
@@ -385,8 +378,7 @@ def TestFlaws(types, model, data, label, printTF=False):
 
 def SlowVelocityTest(types,model):
     net = AnalysisModel(types, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\'+model+'.pt'
-    weights = torch.load(save_loc)
+    weights = torch.load(model)
     net.load_state_dict(weights)
     net.eval()
     
@@ -396,7 +388,7 @@ def SlowVelocityTest(types,model):
         createDataTest('slow_velocity', 2, 0, 100, slow_speed=x/10)
         accuracy = TestModel(net, 'testset_slow_velocity', 100)
         results.append(accuracy)
-        shutil.rmtree('Q:/Documents/TDS SuperUROP/testset_slow_velocity')
+        shutil.rmtree('testset_slow_velocity')
         
     fig = plt.figure()
     ax = plt.axes()
@@ -434,8 +426,7 @@ def ExtractStageActivations(net, data, label):
 
 def ResponsesAcrossDifferentStages(types, model):
     net = AnalysisModel(types, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\'+model+'.pt'
-    weights = torch.load(save_loc)
+    weights = torch.load(model)
     net.load_state_dict(weights)
     net.eval()
     
@@ -459,7 +450,7 @@ def ResponsesAcrossDifferentStages(types, model):
         plt.ylabel('Average Response Magnitude')
         plt.title(x+' Type Average Response Magnitude across Slow Velocities')
         plt.legend()
-        plt.savefig(x+'_activations.svg')
+        plt.savefig('figures/'+x+'_activations.svg')
         plt.show()
     
     return results
@@ -490,8 +481,7 @@ def MakeVaryingDists():
 
 def TruncateModelBarLesion(types, model, testset):
     net = AnalysisModel(types, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\'+model+'.pt'
-    weights = torch.load(save_loc)
+    weights = torch.load(model)
     net.load_state_dict(weights)
     net.eval()
     
@@ -551,7 +541,7 @@ def TruncateModelBarLesion(types, model, testset):
     plt.ylabel('Model Accuracy Percentage')
     plt.title('Accuracy when lesioning various cells')
     plt.legend()
-    plt.savefig('Q:/Documents/TDS SuperUROP/truncated_model_lesion.svg')
+    plt.savefig('figures/truncated_model_lesion.svg')
     plt.show()
 
 
@@ -561,7 +551,7 @@ def ExamineAmacrineResponsesinTruncated(types, cell, testset):
     
     for i in range(8):
         net = AnalysisModel(types, 0.00).to(device)
-        save_loc = 'Q:\Documents\TDS SuperUROP\\model\\'+cell+'\\model_top_dist_'+str(i)+'.pt'
+        save_loc = 'models_and_data/'+cell+'\\model_top_dist_'+str(i)+'.pt'
         weights = torch.load(save_loc)
         net.load_state_dict(weights)
         net.eval()
@@ -578,7 +568,7 @@ def ExamineAmacrineResponsesinTruncated(types, cell, testset):
     plt.xlabel(cell+' Cell')
     plt.title('Accuracy when using different '+cell+' Cells')
     plt.legend()
-    plt.savefig('Q:/Documents/TDS SuperUROP\\'+cell+'_substitute.svg')
+    plt.savefig('figures/'+cell+'_substitute.svg')
     plt.show()
 
 
@@ -591,7 +581,7 @@ def BipolarAmacrineSubstitute():
             left_accuracy = []
             right_accuracy = []
             net = AnalysisModel(2, 0.00).to(device)
-            save_loc = 'Q:\Documents\TDS SuperUROP\\model\\combinations\\model_'+str(b)+'_'+str(a)+'.pt'
+            save_loc = 'models_and_data/model_'+str(b)+'_'+str(a)+'.pt'
             weights = torch.load(save_loc)
             net.load_state_dict(weights)
             net.eval()
@@ -615,7 +605,7 @@ def BipolarAmacrineSubstitute():
             ax.set_title('Slow Velocity Curve for Bipolar '+str(b) + ' and Amacrine '+str(a))
             ax.set_xlabel('Slow Velocity')
             ax.set_ylabel('Model Accuracy')
-            plt.savefig('Q:/Documents/TDS SuperUROP\\model\\combination_graphs\\graph_'+str(b)+'_'+str(a)+'.svg')
+            plt.savefig('figures/graph_'+str(b)+'_'+str(a)+'.svg')
             plt.show()
 
     # json_dump = json.dumps(model_results)
@@ -629,7 +619,7 @@ def TruncatedModelSlowCurve(types, model, sace):
     left_accuracy = []
     right_accuracy = []
     net = AnalysisModel(types, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\'+model+'.pt'
+    save_loc = 'models_and_data/'+model+'.pt'
     weights = torch.load(save_loc)
     net.load_state_dict(weights)
     net.eval()
@@ -652,7 +642,7 @@ def TruncatedModelSlowCurve(types, model, sace):
     ax.set_title('Slow Velocity Curve for Truncated Model')
     ax.set_xlabel('Slow Velocity')
     ax.set_ylabel('Model Accuracy')
-    plt.savefig(sace+'.svg')
+    plt.savefig('figures/'+sace+'.svg')
     plt.show()
     return None
 
@@ -665,7 +655,7 @@ def BipolarSubstitute():
         right_accuracy = []
         only_right_accuracy = []
         net = AnalysisModel(2, 0.00).to(device)
-        save_loc = '../retina_model_models/model_bipolar_'+str(b)+'.pt'
+        save_loc = 'models_and_data/model_bipolar_'+str(b)+'.pt'
         weights = torch.load(save_loc)
         net.load_state_dict(weights)
         net.eval()
@@ -690,7 +680,7 @@ def BipolarSubstitute():
     ax.set_title('Slow Velocity Curve for Bipolar '+str(b))
     ax.set_xlabel('Fast Velocity')
     ax.set_ylabel('Model Accuracy')
-    plt.savefig('graph_fast_bipolar_'+str(b)+'.svg')
+    plt.savefig('figures/graph_fast_bipolar_'+str(b)+'.svg')
     plt.show()
 
     json_dump = json.dumps(model_results)
@@ -719,7 +709,7 @@ def ControlledDirection(net, sace):
     fig, ax = plt.subplots()
     ax.stackplot(velocity_labels, current_results.values(),
                  labels=current_results.keys())
-    plt.savefig(sace+'.svg')
+    plt.savefig('figures/'+sace+'.svg')
     plt.show()
     return np.array(left_accuracy) + np.array(right_accuracy)
 
@@ -766,7 +756,7 @@ net.{0}.ganglion_temporal.bias.data = torch.zeros(1).to(device)
         net.eval()
     
     plt.plot([x*0.05 + 0.50 for x in range(0,51)],results.T)
-    plt.savefig('overlap_bipolar_accuracy.svg')
+    plt.savefig('figures/overlap_bipolar_accuracy.svg')
     
     return None
 
