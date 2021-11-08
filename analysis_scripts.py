@@ -609,7 +609,7 @@ def BipolarAmacrineSubstitute():
             plt.show()
 
     # json_dump = json.dumps(model_results)
-    # f = open("Q:/Documents/TDS SuperUROP\\model\\combinations.json","w")
+    # f = open("models_and_data/combinations.json","w")
     # f.write(json_dump)
     # f.close()
     return model_results
@@ -661,7 +661,7 @@ def BipolarSubstitute():
         net.eval()
         
         for i in range(0,51):
-            testset = 'retina_model_datasets/1x_'+str(i)+'_dist'
+            testset = '1x_'+str(i)+'_dist'
             base_res, left, right, only_right = TestModel_LeftRight(net, testset, 30)
             left = base_res*left
             right = base_res*right
@@ -684,7 +684,7 @@ def BipolarSubstitute():
     plt.show()
 
     json_dump = json.dumps(model_results)
-    f = open("bipolar_empha.json","w")
+    f = open("models_and_data/bipolar_empha.json","w")
     f.write(json_dump)
     f.close()
     return model_results[str(y)][2]
@@ -716,7 +716,7 @@ def ControlledDirection(net, sace):
 
 def BipolarPrune(types, model):
     net = AnalysisModel(types, 0.00).to(device)
-    save_loc = 'Q:\Documents\TDS SuperUROP\\'+model+'.pt'
+    save_loc = 'models_and_data/'+model+'.pt'
     weights = torch.load(save_loc)
     net.load_state_dict(weights)
     net.eval()

@@ -20,8 +20,8 @@ plt.rcParams["font.family"] = "arial"
 plt.rcParams['font.size'] = 16
 
 def PsycometricFunction():
-    model = np.load('../retina_model_models/psycho_alpha_full.npy')[10:]
-    ablated = np.load('../retina_model_models/psycho_alpha_ablated.npy')[10:]
+    model = np.load('models_and_data/psycho_alpha_full.npy')[10:]
+    ablated = np.load('models_and_data/psycho_alpha_ablated.npy')[10:]
     
     fig, ax = plt.subplots()
     
