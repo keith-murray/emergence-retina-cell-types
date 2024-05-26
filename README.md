@@ -1,10 +1,8 @@
 <div align="center">
-<img src="https://github.com/ktmurray1999/emergence-retina-cell-types/blob/main/figures/right_dream.pt.gif" alt="Spatiotemporal filter" width="350"></img>
+<img src="https://github.com/ktmurray1999/emergence-retina-cell-types/blob/main/figures/right_dream.pt.gif" alt="Spatiotemporal filter" width="350">
 </div>
 
 # Emergence of direction-selective retinal cell types in task-optimized deep learning models
-
-## What is thie repo?
 
 This repository contains the code for my paper "Emergence of direction-selective retinal cell types in task-optimized deep learning models". All code is writen in Python and deep learning models are coded in PyTorch.
 
