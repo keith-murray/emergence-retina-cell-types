@@ -1,5 +1,5 @@
 <div align="center">
-<img src="https://github.com/ktmurray1999/emergence-retina-cell-types/blob/main/figures/right_dream.pt.gif" alt="Spatiotemporal filter" width="350">
+<img src="https://github.com/keith-murray/emergence-retina-cell-types/blob/main/figures/right_dream.pt.gif" alt="Spatiotemporal filter" width="350">
 </div>
 
 # Emergence of direction-selective retinal cell types in task-optimized deep learning models
